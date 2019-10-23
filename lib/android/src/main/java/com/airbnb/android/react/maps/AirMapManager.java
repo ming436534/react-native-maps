@@ -20,7 +20,9 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MapStyleOptions;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -40,7 +42,10 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
   private static final int SET_INDOOR_ACTIVE_LEVEL_INDEX = 10;
   private static final int SET_CAMERA = 11;
   private static final int ANIMATE_CAMERA = 12;
+  private static final int ADD_CLUSTER_MARKERS = 13;
+  private static final int REMOVE_CLUSTER_MARKER = 14;
 
+  private final Map<String, AirClusterItem> airClusterItemMap = new HashMap<>();
 
   private final Map<String, Integer> MAP_TYPES = MapBuilder.of(
       "standard", GoogleMap.MAP_TYPE_NORMAL,
@@ -349,6 +354,31 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
       case SET_INDOOR_ACTIVE_LEVEL_INDEX:
         view.setIndoorActiveLevelIndex(args.getInt(0));
         break;
+      case ADD_CLUSTER_MARKERS:
+        ReadableArray arr = args.getArray(0);
+        List<AirClusterItem> l = new ArrayList();
+        for (int i = 0; i < arr.size(); i++) {
+          ReadableMap map = arr.getMap(i);
+          String id = map.getString("id");
+          String title = map.getString("title");
+          String snippet = map.getString("snippet");
+          lat = map.getDouble("lat");
+          lng = map.getDouble("lng");
+          AirClusterItem item = new AirClusterItem(id, lat, lng, title, snippet);
+          l.add(item);
+          airClusterItemMap.put(id, item);
+        }
+        view.mClusterManager.addItems(l);
+        view.mClusterManager.cluster();
+        break;
+      case REMOVE_CLUSTER_MARKER:
+        String id = args.getString(0);
+        if (airClusterItemMap.containsKey(id)) {
+          AirClusterItem item = airClusterItemMap.get(id);
+          view.mClusterManager.removeItem(item);
+          airClusterItemMap.remove(item);
+        }
+        break;
     }
   }
 
@@ -403,7 +433,9 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
 
     map.putAll(MapBuilder.of(
       "setMapBoundaries", SET_MAP_BOUNDARIES,
-      "setIndoorActiveLevelIndex", SET_INDOOR_ACTIVE_LEVEL_INDEX
+      "setIndoorActiveLevelIndex", SET_INDOOR_ACTIVE_LEVEL_INDEX,
+      "addClusterMarkers", ADD_CLUSTER_MARKERS,
+      "removeClusterMarker", REMOVE_CLUSTER_MARKER
     ));
 
     return map;

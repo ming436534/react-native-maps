@@ -9,8 +9,12 @@ import android.graphics.Point;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.os.Build;
+
+import androidx.core.content.PermissionChecker;
 import androidx.core.view.GestureDetectorCompat;
 import androidx.core.view.MotionEventCompat;
+
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -54,6 +58,7 @@ import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.VisibleRegion;
 import com.google.android.gms.maps.model.IndoorBuilding;
 import com.google.android.gms.maps.model.IndoorLevel;
+import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.data.kml.KmlContainer;
 import com.google.maps.android.data.kml.KmlLayer;
 import com.google.maps.android.data.kml.KmlPlacemark;
@@ -112,6 +117,8 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
   private boolean destroyed = false;
   private final ThemedReactContext context;
   private final EventDispatcher eventDispatcher;
+
+  public ClusterManager<AirClusterItem> mClusterManager;
 
   private ViewAttacherGroup attacherGroup;
 
@@ -213,6 +220,7 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
     this.map.setOnMarkerDragListener(this);
     this.map.setOnPoiClickListener(this);
     this.map.setOnIndoorStateChangeListener(this);
+    this.mClusterManager = new ClusterManager(context, map);
 
     manager.pushEvent(context, this, "onMapReady", new WritableNativeMap());
 
@@ -246,16 +254,17 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
       public boolean onMarkerClick(Marker marker) {
         WritableMap event;
         AirMapMarker airMapMarker = getMarkerMap(marker);
+        if (airMapMarker != null) {
+          event = makeClickEventData(marker.getPosition());
+          event.putString("action", "marker-press");
+          event.putString("id", airMapMarker.getIdentifier());
+          manager.pushEvent(context, view, "onMarkerPress", event);
 
-        event = makeClickEventData(marker.getPosition());
-        event.putString("action", "marker-press");
-        event.putString("id", airMapMarker.getIdentifier());
-        manager.pushEvent(context, view, "onMarkerPress", event);
-
-        event = makeClickEventData(marker.getPosition());
-        event.putString("action", "marker-press");
-        event.putString("id", airMapMarker.getIdentifier());
-        manager.pushEvent(context, airMapMarker, "onPress", event);
+          event = makeClickEventData(marker.getPosition());
+          event.putString("action", "marker-press");
+          event.putString("id", airMapMarker.getIdentifier());
+          manager.pushEvent(context, airMapMarker, "onPress", event);
+        }
 
         // Return false to open the callout info window and center on the marker
         // https://developers.google.com/android/reference/com/google/android/gms/maps/GoogleMap
@@ -360,6 +369,7 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
             LatLngBoundsUtils.BoundsAreDifferent(bounds, cameraLastIdleBounds))) {
           cameraLastIdleBounds = bounds;
           eventDispatcher.dispatchEvent(new RegionChangeEvent(getId(), bounds, false));
+          mClusterManager.cluster();
         }
       }
     });
@@ -418,8 +428,8 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
   }
 
   private boolean hasPermissions() {
-    return checkSelfPermission(getContext(), PERMISSIONS[0]) == PackageManager.PERMISSION_GRANTED ||
-        checkSelfPermission(getContext(), PERMISSIONS[1]) == PackageManager.PERMISSION_GRANTED;
+    return checkSelfPermission(getContext(), PERMISSIONS[0]) == PermissionChecker.PERMISSION_GRANTED
+      || checkSelfPermission(getContext(), PERMISSIONS[1]) == PermissionChecker.PERMISSION_GRANTED;
   }
 
 
@@ -933,12 +943,14 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
   @Override
   public View getInfoWindow(Marker marker) {
     AirMapMarker markerView = getMarkerMap(marker);
+    if (markerView == null) return null;
     return markerView.getCallout();
   }
 
   @Override
   public View getInfoContents(Marker marker) {
     AirMapMarker markerView = getMarkerMap(marker);
+    if (markerView == null) return null;
     return markerView.getInfoContents();
   }
 
@@ -1272,6 +1284,9 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
   }
 
   private AirMapMarker getMarkerMap(Marker marker) {
+    if (!markerMap.containsKey(marker)) {
+      return null;
+    }
     AirMapMarker airMarker = markerMap.get(marker);
 
     if (airMarker != null) {
