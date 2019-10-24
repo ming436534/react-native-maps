@@ -106,6 +106,7 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
       "android.permission.ACCESS_FINE_LOCATION", "android.permission.ACCESS_COARSE_LOCATION"};
 
   private final List<AirMapFeature> features = new ArrayList<>();
+  private final List<String> pendingPreloadUris = new ArrayList<>();
   private final Map<Marker, AirMapMarker> markerMap = new HashMap<>();
   private final Map<Polyline, AirMapPolyline> polylineMap = new HashMap<>();
   private final Map<Polygon, AirMapPolygon> polygonMap = new HashMap<>();
@@ -223,8 +224,11 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
     this.map.setOnPoiClickListener(this);
     this.map.setOnIndoorStateChangeListener(this);
     this.mClusterManager = new ClusterManager<>(context, map);
-    mClusterManager.setRenderer(new AirClusterRenderer<>(context, map, mClusterManager, this));
-
+    AirClusterRenderer<AirClusterItem> r = new AirClusterRenderer<>(context, map, mClusterManager, this);
+    mClusterManager.setRenderer(r);
+    for (String u : pendingPreloadUris) {
+      r.preloadIcon(u);
+    }
     manager.pushEvent(context, this, "onMapReady", new WritableNativeMap());
 
     final AirMapView view = this;
@@ -939,6 +943,14 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
     LatLngBounds bounds = builder.build();
 
     map.setLatLngBoundsForCameraTarget(bounds);
+  }
+
+  public void setClusterItemIcon(String source) {
+    if (this.map == null) {
+        this.pendingPreloadUris.add(source);
+    } else {
+      ((AirClusterRenderer)mClusterManager.getRenderer()).preloadIcon(source);
+    }
   }
 
   // InfoWindowAdapter interface

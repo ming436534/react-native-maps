@@ -244,6 +244,7 @@ declare module "react-native-maps" {
     minZoomLevel?: number;
     maxZoomLevel?: number;
     kmlSrc?: string;
+    clusterItemIcons?:[string];
   }
 
   export default class MapView extends React.Component<MapViewProps, any> {
@@ -274,6 +275,8 @@ declare module "react-native-maps" {
     takeSnapshot(options?: SnapshotOptions): Promise<string>;
     pointForCoordinate(coordinate: LatLng): Promise<Point>;
     coordinateForPoint(point: Point): Promise<LatLng>;
+    addClusterItems(arr:[{id:string, title:string, snippet:string, icon:string, latLng: LatLng}]):void;
+    removeClusterItems(id:string):void;
   }
 
   export class MapViewAnimated extends MapView {}

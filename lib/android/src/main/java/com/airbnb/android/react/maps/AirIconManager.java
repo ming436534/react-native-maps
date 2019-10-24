@@ -64,9 +64,9 @@ public class AirIconManager {
         return BitmapDescriptorFactory.fromResource(getDrawableResourceByName(name));
     }
     public void loadImage(final String uri) {
-        if (uri == null) {
-        } else if (uri.startsWith("http://") || uri.startsWith("https://") ||
-                uri.startsWith("file://") || uri.startsWith("asset://") || uri.startsWith("data:")) {
+        if (getDescriptor(uri) != null) return;
+        if (uri != null && (uri.startsWith("http://") || uri.startsWith("https://") ||
+                uri.startsWith("file://") || uri.startsWith("asset://") || uri.startsWith("data:"))) {
             ImageRequest imageRequest = ImageRequestBuilder
                     .newBuilderWithSource(Uri.parse(uri))
                     .build();

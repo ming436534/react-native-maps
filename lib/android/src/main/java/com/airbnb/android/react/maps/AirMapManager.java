@@ -267,9 +267,11 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
     }
   }
 
-  @ReactProp(name = "clusterItemIcon")
-  public void setClusterItemIcon(AirMapView view, @Nullable String source) {
-    view.setClusterItemIcon(source);
+  @ReactProp(name = "clusterItemIcons")
+  public void setClusterItemIcons(AirMapView view, ReadableArray sources) {
+    for (int i = 0; i < sources.size(); i++) {
+      view.setClusterItemIcon(sources.getString(i));
+    }
   }
 
   @Override
@@ -372,8 +374,9 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
           if (map.hasKey("icon")) {
             iconUri = map.getString("icon");
           }
-          lat = map.getDouble("lat");
-          lng = map.getDouble("lng");
+          region = map.getMap("latLng");
+          lat = region.getDouble("latitude");
+          lng = region.getDouble("longitude");
           AirClusterItem item = new AirClusterItem(id, lat, lng, title, snippet, iconUri);
           l.add(item);
           airClusterItemMap.put(id, item);

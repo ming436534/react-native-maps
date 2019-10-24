@@ -172,6 +172,10 @@ public class AirClusterRenderer<T extends AirClusterItem> implements ClusterRend
         mClusterManager.getClusterMarkerCollection().setOnInfoWindowClickListener(null);
     }
 
+    public void preloadIcon(String s) {
+        mAirIconManager.loadImage(s);
+    }
+
     private LayerDrawable makeClusterBackground() {
         mColoredCircleBackground = new ShapeDrawable(new OvalShape());
         ShapeDrawable outline = new ShapeDrawable(new OvalShape());
@@ -772,23 +776,6 @@ public class AirClusterRenderer<T extends AirClusterItem> implements ClusterRend
      * Called after the marker for a ClusterItem has been added to the map.
      */
     protected void onClusterItemRendered(T clusterItem, Marker marker) {
-        String uri = clusterItem.getIconUri();
-        if (uri != null) {
-            BitmapDescriptor d = mAirIconManager.getDescriptor(uri);
-            if (d == null) {
-                mAirIconManager.loadImage(uri);
-                List<Marker> l;
-                if (uriToMarkerCache.containsKey(uri)) {
-                    l = uriToMarkerCache.get(uri);
-                } else {
-                    l = new ArrayList<>();
-                    uriToMarkerCache.put(uri, l);
-                }
-                l.add(marker);
-            } else {
-                marker.setIcon(d);
-            }
-        }
     }
 
     /**
@@ -855,6 +842,22 @@ public class AirClusterRenderer<T extends AirClusterItem> implements ClusterRend
             // Don't show small clusters. Render the markers inside, instead.
             if (!shouldRenderAsCluster(cluster)) {
                 for (T item : cluster.getItems()) {
+                    String uri = item.getIconUri();
+                    boolean isPending = false;
+                    List<Marker> l = null;
+                    BitmapDescriptor d = null;
+                    if (uri != null) {
+                        d = mAirIconManager.getDescriptor(uri);
+                        if (d == null) {
+                            if (uriToMarkerCache.containsKey(uri)) {
+                                l = uriToMarkerCache.get(uri);
+                            } else {
+                                l = new ArrayList<>();
+                                uriToMarkerCache.put(uri, l);
+                            }
+                            isPending = true;
+                        }
+                    }
                     Marker marker = mMarkerCache.get(item);
                     MarkerWithPosition markerWithPosition;
                     if (marker == null) {
@@ -873,14 +876,24 @@ public class AirClusterRenderer<T extends AirClusterItem> implements ClusterRend
                             markerOptions.title(item.getTitle());
                         }
                         onBeforeClusterItemRendered(item, markerOptions);
+                        if (d != null) {
+                            markerOptions.icon(d);
+                        }
                         marker = mClusterManager.getMarkerCollection().addMarker(markerOptions);
                         markerWithPosition = new MarkerWithPosition(marker);
                         mMarkerCache.put(item, marker);
+                        if (isPending && l != null) {
+                            l.add(marker);
+                            mAirIconManager.loadImage(uri);
+                        }
                         if (animateFrom != null) {
                             markerModifier.animate(markerWithPosition, animateFrom, item.getPosition());
                         }
                     } else {
                         markerWithPosition = new MarkerWithPosition(marker);
+                    }
+                    if (d != null) {
+                        marker.setIcon(d);
                     }
                     onClusterItemRendered(item, marker);
                     newMarkers.add(markerWithPosition);
