@@ -44,6 +44,7 @@ import com.google.android.gms.maps.GoogleMapOptions;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.Projection;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.GroundOverlay;
@@ -58,6 +59,7 @@ import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.VisibleRegion;
 import com.google.android.gms.maps.model.IndoorBuilding;
 import com.google.android.gms.maps.model.IndoorLevel;
+import com.google.maps.android.clustering.ClusterItem;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.data.kml.KmlContainer;
 import com.google.maps.android.data.kml.KmlLayer;
@@ -220,7 +222,8 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
     this.map.setOnMarkerDragListener(this);
     this.map.setOnPoiClickListener(this);
     this.map.setOnIndoorStateChangeListener(this);
-    this.mClusterManager = new ClusterManager(context, map);
+    this.mClusterManager = new ClusterManager<>(context, map);
+    mClusterManager.setRenderer(new AirClusterRenderer<>(context, map, mClusterManager, this));
 
     manager.pushEvent(context, this, "onMapReady", new WritableNativeMap());
 

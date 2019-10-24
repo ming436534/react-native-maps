@@ -5,17 +5,21 @@ import com.google.maps.android.clustering.ClusterItem;
 
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 public class AirClusterItem implements ClusterItem {
     private final String mID;
     private final LatLng mPosition;
     private final String mTitle;
     private final String mSnippet;
+    private final String mIconUri;
 
-    public AirClusterItem(String id, double lat, double lng, String title, String snippet) {
+    public AirClusterItem(String id, double lat, double lng, String title, String snippet, @Nullable String iconUri) {
         mPosition = new LatLng(lat, lng);
         mTitle = title;
         mSnippet = snippet;
         mID = id;
+        mIconUri = iconUri;
     }
 
     @Override
@@ -32,4 +36,5 @@ public class AirClusterItem implements ClusterItem {
     public String getSnippet() {
         return mSnippet;
     }
+    public String getIconUri() { return mIconUri; }
 }

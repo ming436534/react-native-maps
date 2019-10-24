@@ -19,6 +19,7 @@ import com.google.android.gms.maps.GoogleMapOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MapStyleOptions;
+import com.google.maps.android.clustering.ClusterItem;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -266,6 +267,11 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
     }
   }
 
+  @ReactProp(name = "clusterItemIcon")
+  public void setClusterItemIcon(AirMapView view, @Nullable String source) {
+    view.setClusterItemIcon(source);
+  }
+
   @Override
   public void receiveCommand(AirMapView view, int commandId, @Nullable ReadableArray args) {
     Integer duration;
@@ -362,9 +368,13 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
           String id = map.getString("id");
           String title = map.getString("title");
           String snippet = map.getString("snippet");
+          String iconUri = null;
+          if (map.hasKey("icon")) {
+            iconUri = map.getString("icon");
+          }
           lat = map.getDouble("lat");
           lng = map.getDouble("lng");
-          AirClusterItem item = new AirClusterItem(id, lat, lng, title, snippet);
+          AirClusterItem item = new AirClusterItem(id, lat, lng, title, snippet, iconUri);
           l.add(item);
           airClusterItemMap.put(id, item);
         }
@@ -407,9 +417,9 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
 
     map.putAll(MapBuilder.of(
         "onIndoorLevelActivated", MapBuilder.of("registrationName", "onIndoorLevelActivated"),
-        "onIndoorBuildingFocused", MapBuilder.of("registrationName", "onIndoorBuildingFocused"),
         "onDoublePress", MapBuilder.of("registrationName", "onDoublePress"),
-        "onMapLoaded", MapBuilder.of("registrationName", "onMapLoaded")
+        "onMapLoaded", MapBuilder.of("registrationName", "onMapLoaded"),
+        "onIndoorBuildingFocused", MapBuilder.of("registrationName", "onIndoorBuildingFocused")
     ));
 
     return map;
