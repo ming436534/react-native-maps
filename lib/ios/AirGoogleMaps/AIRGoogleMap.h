@@ -15,7 +15,12 @@
 #import "AIRGMSMarker.h"
 #import "RCTConvert+AirMap.h"
 
+#ifdef HAVE_GOOGLE_MAPS_UTILS
+#import <Google-Maps-iOS-Utils/GMUMarkerClustering.h>
+@interface AIRGoogleMap : GMSMapView<GMUClusterManagerDelegate, GMSMapViewDelegate>
+#else
 @interface AIRGoogleMap : GMSMapView
+#endif
 
 // TODO: don't use MK region?
 @property (nonatomic, weak) RCTBridge *bridge;
@@ -72,6 +77,7 @@
 - (void)didChangeCameraPosition:(GMSCameraPosition *)position;
 - (void)idleAtCameraPosition:(GMSCameraPosition *)position;
 - (void)didTapPOIWithPlaceID:(NSString *)placeID name:(NSString *) name location:(CLLocationCoordinate2D) location;
+- (void)addClusterItems:(NSArray *)items;
 - (NSArray *)getMapBoundaries;
 
 + (MKCoordinateRegion)makeGMSCameraPositionFromMap:(GMSMapView *)map andGMSCameraPosition:(GMSCameraPosition *)position;

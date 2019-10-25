@@ -564,6 +564,20 @@ RCT_EXPORT_METHOD(setIndoorActiveLevelIndex:(nonnull NSNumber *)reactTag
   }];
  }
 
+RCT_EXPORT_METHOD(addClusterMarkers:(nonnull NSNumber *)reactTag
+                  items:(nonnull NSArray *) items)
+{
+  [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
+    id view = viewRegistry[reactTag];
+    if (![view isKindOfClass:[AIRGoogleMap class]]) {
+      RCTLogError(@"Invalid view returned from registry, expecting AIRGoogleMap, got: %@", view);
+    } else {
+      AIRGoogleMap *mapView = (AIRGoogleMap *)view;
+      [mapView addClusterItems:items];
+    }
+  }];
+ }
+
 + (BOOL)requiresMainQueueSetup {
   return YES;
 }

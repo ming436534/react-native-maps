@@ -24,7 +24,10 @@
 #import "RCTConvert+AirMap.h"
 #import <objc/runtime.h>
 
+
 #ifdef HAVE_GOOGLE_MAPS_UTILS
+#import "AirClusterItem.h"
+#import "AirGMUClusterRenderer.h"
 #import <Google-Maps-iOS-Utils/GMUKMLParser.h>
 #import <Google-Maps-iOS-Utils/GMUPlacemark.h>
 #import <Google-Maps-iOS-Utils/GMUPoint.h>
@@ -66,6 +69,9 @@ id regionAsJSON(MKCoordinateRegion region) {
   BOOL _didCallOnMapReady;
   BOOL _didMoveToWindow;
   BOOL _zoomTapEnabled;
+#ifdef HAVE_GOOGLE_MAPS_UTILS
+  GMUClusterManager *_clusterManager;
+#endif
 }
 
 - (instancetype)init
@@ -223,6 +229,25 @@ id regionAsJSON(MKCoordinateRegion region) {
 }
 #pragma clang diagnostic pop
 
+#ifdef HAVE_GOOGLE_MAPS_UTILS
+- (void)addClusterItems:(NSArray *)items {
+  NSMutableArray* clusterItems = [[NSMutableArray alloc] initWithCapacity:[items count]];
+  for (int i = 0; i < items.count; i++) {
+    NSDictionary* dict = (NSDictionary *)items[i];
+    NSDictionary* latLng = (NSDictionary *)dict[@"latLng"];
+    double lat = [[latLng objectForKey:@"latitude"] doubleValue];
+    double lng = [[latLng objectForKey:@"longitude"] doubleValue];
+    AirClusterItem* airClusterItem = [[AirClusterItem alloc] initWithPosition:CLLocationCoordinate2DMake(lat, lng)
+                                                                         name:dict[@"title"]
+                                                                   identifier:dict[@"id"]
+                                                                      iconUri:[dict objectForKey:@"icon"]];
+    [clusterItems addObject:airClusterItem];
+  }
+  [_clusterManager addItems:clusterItems];
+  [_clusterManager cluster];
+}
+#endif
+
 - (NSArray *)getMapBoundaries
 {
     GMSVisibleRegion visibleRegion = self.projection.visibleRegion;
@@ -294,6 +319,20 @@ id regionAsJSON(MKCoordinateRegion region) {
   if (_didCallOnMapReady) return;
   _didCallOnMapReady = true;
   if (self.onMapReady) self.onMapReady(@{});
+#ifdef HAVE_GOOGLE_MAPS_UTILS
+  id<GMUClusterAlgorithm> algorithm =
+      [[GMUNonHierarchicalDistanceBasedAlgorithm alloc] init];
+  id<GMUClusterIconGenerator> iconGenerator =
+      [[GMUDefaultClusterIconGenerator alloc] init];
+  AirGMUClusterRenderer* renderer =
+      [[AirGMUClusterRenderer alloc] initWithMapView:self
+                                    clusterIconGenerator:iconGenerator];
+  renderer.bridge = _bridge;
+  _clusterManager =
+      [[GMUClusterManager alloc] initWithMap:self
+                                   algorithm:algorithm
+                                    renderer:renderer];
+#endif
 }
 
 - (void)mapViewDidFinishTileRendering {
@@ -301,21 +340,24 @@ id regionAsJSON(MKCoordinateRegion region) {
 }
 
 - (BOOL)didTapMarker:(GMSMarker *)marker {
-  AIRGMSMarker *airMarker = (AIRGMSMarker *)marker;
+  if ([marker isKindOfClass:[AIRGMSMarker class]]) {
+      AIRGMSMarker *airMarker = (AIRGMSMarker *)marker;
+      if (airMarker != nil) {
+          id event = @{@"action": @"marker-press",
+                       @"id": airMarker.identifier ?: @"unknown",
+                       @"coordinate": @{
+                           @"latitude": @(airMarker.position.latitude),
+                           @"longitude": @(airMarker.position.longitude)
+                           }
+                       };
 
-  id event = @{@"action": @"marker-press",
-               @"id": airMarker.identifier ?: @"unknown",
-               @"coordinate": @{
-                   @"latitude": @(airMarker.position.latitude),
-                   @"longitude": @(airMarker.position.longitude)
-                   }
-               };
+          if (airMarker.onPress) airMarker.onPress(event);
+          if (self.onMarkerPress) self.onMarkerPress(event);
 
-  if (airMarker.onPress) airMarker.onPress(event);
-  if (self.onMarkerPress) self.onMarkerPress(event);
-
-  // TODO: not sure why this is necessary
-  [self setSelectedMarker:marker];
+          // TODO: not sure why this is necessary
+          [self setSelectedMarker:marker];
+      }
+  }
   return NO;
 }
 
@@ -376,6 +418,9 @@ id regionAsJSON(MKCoordinateRegion region) {
                @"region": regionAsJSON([AIRGoogleMap makeGMSCameraPositionFromMap:self andGMSCameraPosition:position]),
                };
   if (self.onChange) self.onChange(event);  // complete
+#ifdef HAVE_GOOGLE_MAPS_UTILS
+  [_clusterManager cluster];
+#endif
 }
 
 - (void)setMapPadding:(UIEdgeInsets)mapPadding {
@@ -877,6 +922,29 @@ id regionAsJSON(MKCoordinateRegion region) {
     REQUIRES_GOOGLE_MAPS_UTILS();
 #endif
 }
+
+#ifdef HAVE_GOOGLE_MAPS_UTILS
+#pragma mark GMUClusterManagerDelegate
+
+- (void)clusterManager:(GMUClusterManager *)clusterManager didTapCluster:(id<GMUCluster>)cluster {
+  GMSCameraPosition *newCamera =
+      [GMSCameraPosition cameraWithTarget:cluster.position zoom:self.camera.zoom + 1];
+  GMSCameraUpdate *update = [GMSCameraUpdate setCamera:newCamera];
+  [self moveCamera:update];
+}
+
+#pragma mark GMSMapViewDelegate
+
+- (BOOL)mapView:(GMSMapView *)mapView didTapMarker:(GMSMarker *)marker {
+//  POIItem *poiItem = marker.userData;
+//  if (poiItem != nil) {
+//    NSLog(@"Did tap marker for cluster item %@", poiItem.name);
+//  } else {
+//    NSLog(@"Did tap a normal marker");
+//  }
+  return NO;
+}
+#endif
 
 @end
 
