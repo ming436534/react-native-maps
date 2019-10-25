@@ -218,6 +218,7 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
     if (destroyed) {
       return;
     }
+    final AirMapView view = this;
     this.map = map;
     this.map.setInfoWindowAdapter(this);
     this.map.setOnMarkerDragListener(this);
@@ -230,8 +231,6 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
       r.preloadIcon(u);
     }
     manager.pushEvent(context, this, "onMapReady", new WritableNativeMap());
-
-    final AirMapView view = this;
 
     map.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
       @Override
@@ -271,6 +270,15 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
           event.putString("action", "marker-press");
           event.putString("id", airMapMarker.getIdentifier());
           manager.pushEvent(context, airMapMarker, "onPress", event);
+        } else {
+          AirClusterItem item = ((AirClusterRenderer)mClusterManager.getRenderer()).getClusterItem(marker);
+          if (item != null) {
+            WritableMap data = new WritableNativeMap();
+            data.putDouble("latitude", item.getPosition().latitude);
+            data.putDouble("longitude", item.getPosition().longitude);
+            data.putString("id", item.getID());
+            manager.pushEvent(context, view, "onClusterItemClick", data);
+          }
         }
 
         // Return false to open the callout info window and center on the marker

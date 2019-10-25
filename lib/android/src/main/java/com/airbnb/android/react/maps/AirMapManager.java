@@ -422,7 +422,8 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
         "onIndoorLevelActivated", MapBuilder.of("registrationName", "onIndoorLevelActivated"),
         "onDoublePress", MapBuilder.of("registrationName", "onDoublePress"),
         "onMapLoaded", MapBuilder.of("registrationName", "onMapLoaded"),
-        "onIndoorBuildingFocused", MapBuilder.of("registrationName", "onIndoorBuildingFocused")
+        "onIndoorBuildingFocused", MapBuilder.of("registrationName", "onIndoorBuildingFocused"),
+        "onClusterItemClick", MapBuilder.of("registrationName", "onClusterItemClick")
     ));
 
     return map;

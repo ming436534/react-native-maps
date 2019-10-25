@@ -36,5 +36,12 @@ public class AirClusterItem implements ClusterItem {
     public String getSnippet() {
         return mSnippet;
     }
-    public String getIconUri() { return mIconUri; }
+
+    public String getIconUri() {
+        return mIconUri;
+    }
+
+    public String getID() {
+        return mID;
+    }
 }
