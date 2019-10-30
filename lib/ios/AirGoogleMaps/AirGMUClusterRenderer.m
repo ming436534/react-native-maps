@@ -20,7 +20,7 @@ static const NSUInteger kGMUMinClusterSize = 4;
 static const float kGMUMaxClusterZoom = 20;
 
 // Animation duration for marker splitting/merging effects.
-static const double kGMUAnimationDuration = 0.5;  // seconds.
+static const double kGMUAnimationDuration = 0.2;  // seconds.
 
 @implementation AirGMUClusterRenderer {
   // Map view to render clusters on.
@@ -51,6 +51,8 @@ static const double kGMUAnimationDuration = 0.5;  // seconds.
   NSMutableDictionary<GMUWrappingDictionaryKey *, id<GMUCluster>> *_itemToNewClusterMap;
   
   NSMutableDictionary<NSString *, UIImage *> *_uriToUIImage;
+  NSMutableDictionary<NSString *, NSMutableArray<GMSMarker *> *> *_pendingLoadImageMarkers;
+  NSMutableDictionary<NSString *, NSString*> *_loadingURIMap;
 }
 
 - (instancetype)initWithMapView:(GMSMapView *)mapView
@@ -62,6 +64,8 @@ static const double kGMUAnimationDuration = 0.5;  // seconds.
     _renderedClusters = [[NSMutableSet alloc] init];
     _renderedClusterItems = [[NSMutableSet alloc] init];
     _uriToUIImage = [[NSMutableDictionary<NSString *, UIImage *> alloc] init];
+    _pendingLoadImageMarkers = [[NSMutableDictionary alloc] init];
+    _loadingURIMap = [[NSMutableDictionary alloc] init];
     _animatesClusters = YES;
     _minimumClusterSize = kGMUMinClusterSize;
     _maximumClusterZoom = kGMUMaxClusterZoom;
@@ -95,6 +99,47 @@ static const double kGMUAnimationDuration = 0.5;  // seconds.
     _markers = [[NSMutableArray<GMSMarker *> alloc] init];
     [self addOrUpdateClusters:clusters animated:NO];
   }
+}
+
+- (void)loadImageUrls:(NSArray *)urls {
+  for (int i = 0; i < urls.count; i++) {
+    [self loadImageUrl:urls[i]];
+  }
+}
+
+-(void)loadImageUrl:(NSString *)url {
+  if ([_uriToUIImage objectForKey:url] || [_loadingURIMap objectForKey:url]) return;
+  _loadingURIMap[url] = @"Y";
+  NSMutableDictionary<NSString *, NSMutableArray<GMSMarker *> *> *pendingLoadImageMarkers = _pendingLoadImageMarkers;
+  NSMutableDictionary<NSString *, UIImage *> *m = _uriToUIImage;
+  NSMutableDictionary<NSString *, NSString*> *loadingURIMap = _loadingURIMap;
+  [[_bridge moduleForName:@"ImageLoader"] loadImageWithURLRequest:[RCTConvert NSURLRequest:url]
+                                                              size:CGSizeMake(30, 30)
+                                                             scale:RCTScreenScale()
+                                                           clipped:YES
+                                                        resizeMode:RCTResizeModeCenter
+                                                     progressBlock:nil
+                                                  partialLoadBlock:nil
+                                                   completionBlock:^(NSError *error, UIImage *image) {
+                                                      [loadingURIMap removeObjectForKey:url];
+                                                      if (error) {
+                                                        // TODO(lmr): do something with the error?
+                                                        NSLog(@"%@", error);
+                                                      }
+                                                      [m setObject:image forKey:url];
+                                                      dispatch_async(dispatch_get_main_queue(), ^{
+                                                        NSArray<GMSMarker *> *arr = [pendingLoadImageMarkers objectForKey:url];
+                                                        if (arr != nil) {
+                                                          for (int i = 0; i < arr.count; i++) {
+                                                            UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 30, 30)];
+                                                            imageView.image = image;
+                                                            arr[i].iconView = imageView;
+                                                            arr[i].groundAnchor = CGPointMake(0.5, 0.5);
+                                                          }
+                                                        }
+                                                        [pendingLoadImageMarkers removeObjectForKey:url];
+                                                      });
+                                                   }];
 }
 
 - (void)renderAnimatedClusters:(NSArray<id<GMUCluster>> *)clusters {
@@ -158,6 +203,19 @@ static const double kGMUAnimationDuration = 0.5;  // seconds.
     CLLocationCoordinate2D toPosition = toCluster.position;
     marker.layer.latitude = toPosition.latitude;
     marker.layer.longitude = toPosition.longitude;
+    CABasicAnimation *theAnimation;
+
+    //within the animation we will adjust the "opacity"
+    //value of the layer
+    theAnimation = [CABasicAnimation animationWithKeyPath:@"opacity"];
+    theAnimation.duration=0.2;
+    //justify the opacity as you like (1=fully visible, 0=unvisible)
+    theAnimation.fromValue=[NSNumber numberWithFloat:1.0];
+    theAnimation.toValue=[NSNumber numberWithFloat:0];
+
+    //Assign the animation to your UIImage layer and the
+    //animation will start immediately
+    [marker.iconView.layer addAnimation:theAnimation forKey:@"animateOpacity"];
     [CATransaction commit];
   }
 
@@ -296,23 +354,13 @@ static const double kGMUAnimationDuration = 0.5;  // seconds.
                                    userData:item
                                 clusterIcon:nil
                                    animated:shouldAnimate];
-          [[_bridge moduleForName:@"ImageLoader"] loadImageWithURLRequest:[RCTConvert NSURLRequest:item.iconUri]
-                                                                      size:marker.iconView.bounds.size
-                                                                     scale:RCTScreenScale()
-                                                                   clipped:YES
-                                                                resizeMode:RCTResizeModeCenter
-                                                             progressBlock:nil
-                                                          partialLoadBlock:nil
-                                                           completionBlock:^(NSError *error, UIImage *image) {
-                                                             if (error) {
-                                                               // TODO(lmr): do something with the error?
-                                                               NSLog(@"%@", error);
-                                                             }
-                                                             dispatch_async(dispatch_get_main_queue(), ^{
-                                                               marker.icon = image;
-                                                             });
-                                                           }];
-          
+          NSMutableArray<GMSMarker *> * pendingMarkerArray = [_pendingLoadImageMarkers objectForKey:item.iconUri];
+          if (pendingMarkerArray == nil) {
+            pendingMarkerArray = [[NSMutableArray alloc] init];
+            [_pendingLoadImageMarkers setObject:pendingMarkerArray forKey:item.iconUri];
+          }
+          [pendingMarkerArray addObject:marker];
+          [self loadImageUrl:item.iconUri];
         }
       } else {
         marker = [self markerWithPosition:item.position
@@ -321,6 +369,7 @@ static const double kGMUAnimationDuration = 0.5;  // seconds.
                               clusterIcon:nil
                                  animated:shouldAnimate];
       }
+      [_markers addObject:marker];
       [_renderedClusterItems addObject:item];
     }
   }
@@ -347,10 +396,18 @@ static const double kGMUAnimationDuration = 0.5;  // seconds.
   marker.position = initialPosition;
   marker.userData = userData;
   if (clusterIcon != nil) {
-    marker.icon = clusterIcon;
+    UIImageView *imageView;
+    if ([marker.userData conformsToProtocol:@protocol(GMUCluster)]) {
+      imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, clusterIcon.size.width, clusterIcon.size.height)];
+      marker.zIndex = _zIndex + 1;
+    } else {
+      imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 30, 30)];
+      marker.zIndex = _zIndex;
+    }
+    imageView.image = clusterIcon;
+    marker.iconView = imageView;
     marker.groundAnchor = CGPointMake(0.5, 0.5);
   }
-  marker.zIndex = _zIndex;
 
   if ([_delegate respondsToSelector:@selector(renderer:willRenderMarker:)]) {
     [_delegate renderer:self willRenderMarker:marker];
@@ -362,6 +419,19 @@ static const double kGMUAnimationDuration = 0.5;  // seconds.
     [CATransaction setAnimationDuration:_animationDuration];
     marker.layer.latitude = position.latitude;
     marker.layer.longitude = position.longitude;
+    CABasicAnimation *theAnimation;
+
+    //within the animation we will adjust the "opacity"
+    //value of the layer
+    theAnimation = [CABasicAnimation animationWithKeyPath:@"opacity"];
+    theAnimation.duration=0.2;
+    //justify the opacity as you like (1=fully visible, 0=unvisible)
+    theAnimation.fromValue=[NSNumber numberWithFloat:0];
+    theAnimation.toValue=[NSNumber numberWithFloat:1];
+
+    //Assign the animation to your UIImage layer and the
+    //animation will start immediately
+    [marker.iconView.layer addAnimation:theAnimation forKey:@"animateOpacity"];
     [CATransaction commit];
   }
 

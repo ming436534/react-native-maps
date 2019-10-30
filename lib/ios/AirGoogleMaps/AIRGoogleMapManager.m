@@ -105,6 +105,7 @@ RCT_EXPORT_VIEW_PROPERTY(mapType, GMSMapViewType)
 RCT_EXPORT_VIEW_PROPERTY(minZoomLevel, CGFloat)
 RCT_EXPORT_VIEW_PROPERTY(maxZoomLevel, CGFloat)
 RCT_EXPORT_VIEW_PROPERTY(kmlSrc, NSString)
+RCT_EXPORT_VIEW_PROPERTY(clusterItemIcons, NSArray)
 
 RCT_EXPORT_METHOD(getCamera:(nonnull NSNumber *)reactTag
                   resolver: (RCTPromiseResolveBlock)resolve

@@ -10,8 +10,6 @@
 #define AirGMUClusterRenderer_h
 #if defined(HAVE_GOOGLE_MAPS) && defined(HAVE_GOOGLE_MAPS_UTILS)
 
-#import <Foundation/Foundation.h>
-
 #import "AirClusterItem.h"
 #import "GMUClusterRenderer.h"
 #import <Google-Maps-iOS-Utils/GMUMarkerClustering.h>
@@ -116,6 +114,8 @@ NS_ASSUME_NONNULL_BEGIN
  * Subclass can override this method to provide custom logic.
  */
 - (BOOL)shouldRenderAsCluster:(id<GMUCluster>)cluster atZoom:(float)zoom;
+- (void)loadImageUrls:(NSArray *)urls;
+- (void)loadImageUrl:(NSString *)url;
 
 @end
 

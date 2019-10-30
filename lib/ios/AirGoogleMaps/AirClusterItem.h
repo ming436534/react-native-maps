@@ -15,9 +15,9 @@
 @interface AirClusterItem : NSObject<GMUClusterItem>
 
 @property(nonatomic, readonly) CLLocationCoordinate2D position;
-@property(nonatomic, weak) NSString *name;
-@property(nonatomic, weak) NSString *identifier;
-@property(nonatomic, weak) NSString *iconUri;
+@property(nonatomic, strong) NSString *name;
+@property(nonatomic, strong) NSString *identifier;
+@property(nonatomic, strong) NSString *iconUri;
 
 - (instancetype)initWithPosition:(CLLocationCoordinate2D)position
                             name:(NSString *)name

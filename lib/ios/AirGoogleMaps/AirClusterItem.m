@@ -17,9 +17,9 @@
   self = [super init];
 
   if (self) {
-      _position = position;
-      self.iconUri = iconUri;
-      self.name = name;
+    _position = position;
+    self.iconUri = iconUri;
+    self.name = name;
     self.identifier = identifier;
   }
 

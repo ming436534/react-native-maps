@@ -71,6 +71,7 @@ id regionAsJSON(MKCoordinateRegion region) {
   BOOL _zoomTapEnabled;
 #ifdef HAVE_GOOGLE_MAPS_UTILS
   GMUClusterManager *_clusterManager;
+  AirGMUClusterRenderer* _clusterRenderer;
 #endif
 }
 
@@ -324,14 +325,17 @@ id regionAsJSON(MKCoordinateRegion region) {
       [[GMUNonHierarchicalDistanceBasedAlgorithm alloc] init];
   id<GMUClusterIconGenerator> iconGenerator =
       [[GMUDefaultClusterIconGenerator alloc] init];
-  AirGMUClusterRenderer* renderer =
+  _clusterRenderer =
       [[AirGMUClusterRenderer alloc] initWithMapView:self
                                     clusterIconGenerator:iconGenerator];
-  renderer.bridge = _bridge;
+  _clusterRenderer.bridge = _bridge;
   _clusterManager =
       [[GMUClusterManager alloc] initWithMap:self
                                    algorithm:algorithm
-                                    renderer:renderer];
+                                    renderer:_clusterRenderer];
+  if (_clusterItemIcons != nil) {
+    [_clusterRenderer loadImageUrls:_clusterItemIcons];
+  }
 #endif
 }
 
@@ -920,6 +924,19 @@ id regionAsJSON(MKCoordinateRegion region) {
   if (self.onKmlReady) self.onKmlReady(event);
 #else
     REQUIRES_GOOGLE_MAPS_UTILS();
+#endif
+}
+
+- (NSArray *)ClusterItemIcons {
+  return _clusterItemIcons;
+}
+
+- (void)setClusterItemIcons:(NSArray<NSString *> *)icons {
+#ifdef HAVE_GOOGLE_MAPS_UTILS
+  _clusterItemIcons = icons;
+  if (_didCallOnMapReady) {
+    [_clusterRenderer loadImageUrls:icons];
+  }
 #endif
 }
 
