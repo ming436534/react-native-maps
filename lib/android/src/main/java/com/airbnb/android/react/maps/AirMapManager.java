@@ -494,7 +494,7 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
   }
 
   @Override
-  public void removeViewAt(AirMapView parent, int index) {
+  public void removeViewAt(AirMapView parent,int index) {
     parent.removeFeatureAt(index);
   }
 

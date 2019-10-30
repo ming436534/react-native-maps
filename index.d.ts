@@ -240,7 +240,6 @@ declare module "react-native-maps" {
     onMarkerDragStart?: (event: MapEvent) => void;
     onMarkerDrag?: (event: MapEvent) => void;
     onMarkerDragEnd?: (event: MapEvent) => void;
-    onClusterItemClick?: (event: {id:string, latitude: number, longtitude: number}) => void;
 
     minZoomLevel?: number;
     maxZoomLevel?: number;

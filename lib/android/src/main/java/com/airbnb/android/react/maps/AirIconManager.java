@@ -90,7 +90,8 @@ public class AirIconManager {
                                         CloseableStaticBitmap closeableStaticBitmap = (CloseableStaticBitmap) image;
                                         Bitmap bitmap = closeableStaticBitmap.getUnderlyingBitmap();
                                         if (bitmap != null) {
-                                            bitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+                                            bitmap = bitmap.copy(Bitmap.Config.ARGB_8888, false);
+                                            bitmap = bitmap.createScaledBitmap(bitmap, 120, 120, false);
                                             BitmapDescriptor d = BitmapDescriptorFactory.fromBitmap(bitmap);
                                             uriToBitMapDescriptorMap.put(uri, d);
                                             if (cb != null) cb.onBitmapDescriptorReady(d, uri);

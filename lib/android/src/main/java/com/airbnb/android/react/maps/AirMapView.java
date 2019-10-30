@@ -59,6 +59,7 @@ import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.VisibleRegion;
 import com.google.android.gms.maps.model.IndoorBuilding;
 import com.google.android.gms.maps.model.IndoorLevel;
+import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterItem;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.data.kml.KmlContainer;
@@ -259,25 +260,25 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
       @Override
       public boolean onMarkerClick(Marker marker) {
         WritableMap event;
+        event = makeClickEventData(marker.getPosition());
         AirMapMarker airMapMarker = getMarkerMap(marker);
         if (airMapMarker != null) {
-          event = makeClickEventData(marker.getPosition());
           event.putString("action", "marker-press");
           event.putString("id", airMapMarker.getIdentifier());
           manager.pushEvent(context, view, "onMarkerPress", event);
-
-          event = makeClickEventData(marker.getPosition());
-          event.putString("action", "marker-press");
-          event.putString("id", airMapMarker.getIdentifier());
           manager.pushEvent(context, airMapMarker, "onPress", event);
         } else {
           AirClusterItem item = ((AirClusterRenderer)mClusterManager.getRenderer()).getClusterItem(marker);
           if (item != null) {
-            WritableMap data = new WritableNativeMap();
-            data.putDouble("latitude", item.getPosition().latitude);
-            data.putDouble("longitude", item.getPosition().longitude);
-            data.putString("id", item.getID());
-            manager.pushEvent(context, view, "onClusterItemClick", data);
+            event.putString("action", "marker-press");
+            event.putString("id", item.getID());
+            manager.pushEvent(context, view, "onMarkerPress", event);
+          } else {
+            Cluster cluster = ((AirClusterRenderer)(mClusterManager.getRenderer())).getCluster(marker);
+            if (cluster != null) {
+              event.putString("action", "cluster-marker-press");
+              manager.pushEvent(context, view, "onMarkerPress", event);
+            }
           }
         }
 
