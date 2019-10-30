@@ -93,6 +93,8 @@ To access event data, you will need to use `e.nativeEvent`. For example, `onPres
 | `fitToCoordinates` | `coordinates: Array<LatLng>, options: { edgePadding: EdgePadding, animated: Boolean }` | If called in `ComponentDidMount` in android, it will cause an exception. It is recommended to call it from the MapView `onLayout` event.
 | `pointForCoordinate` | `coordinate: LatLng` | Converts a map coordinate to a view coordinate (`Point`). Returns a `Promise<Point>`.
 | `coordinateForPoint` | `point: Point` | Converts a view coordinate (`Point`) to a map coordinate. Returns a `Promise<Coordinate>`.
+| `addClusterItems` | `items: [{id: String, latLng: LatLng, snippet: String, title:String, icon:String}]` | Render clustering markers`.
+| `removeClusterItem` | `id: String` | Remove cluster item by the id provided when adding it`.
 | `getMarkersFrames` | `onlyVisible: Boolean` | Get markers' centers and frames in view coordinates. Returns a `Promise<{ "markerID" : { point: Point, frame: Frame } }>`. **Note**: iOS only.
 
 

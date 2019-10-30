@@ -276,7 +276,7 @@ declare module "react-native-maps" {
     pointForCoordinate(coordinate: LatLng): Promise<Point>;
     coordinateForPoint(point: Point): Promise<LatLng>;
     addClusterItems(arr:[{id:string, title:string, snippet:string, icon:string, latLng: LatLng}]):void;
-    removeClusterItems(id:string):void;
+    removeClusterItem(id:string):void;
   }
 
   export class MapViewAnimated extends MapView {}
