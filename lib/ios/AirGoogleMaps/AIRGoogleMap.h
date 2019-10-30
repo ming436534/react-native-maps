@@ -80,6 +80,7 @@
 - (void)didTapPOIWithPlaceID:(NSString *)placeID name:(NSString *) name location:(CLLocationCoordinate2D) location;
 - (void)addClusterItems:(NSArray *)items;
 - (void)removeClusterItem:(NSString*)identifier;
+- (void)removeAllClusterItem;
 - (NSArray *)getMapBoundaries;
 
 + (MKCoordinateRegion)makeGMSCameraPositionFromMap:(GMSMapView *)map andGMSCameraPosition:(GMSCameraPosition *)position;

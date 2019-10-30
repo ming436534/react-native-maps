@@ -96,6 +96,7 @@ To access event data, you will need to use `e.nativeEvent`. For example, `onPres
 | `coordinateForPoint` | `point: Point` | Converts a view coordinate (`Point`) to a map coordinate. Returns a `Promise<Coordinate>`.
 | `addClusterItems` | `items: [{id: String, latLng: LatLng, snippet: String, title:String, icon:String}]` | Render clustering markers`.
 | `removeClusterItem` | `id: String` | Remove cluster item by the id provided when adding it`.
+| `removeAllClusterItem` |  | Remove all cluster item`.
 | `getMarkersFrames` | `onlyVisible: Boolean` | Get markers' centers and frames in view coordinates. Returns a `Promise<{ "markerID" : { point: Point, frame: Frame } }>`. **Note**: iOS only.
 
 

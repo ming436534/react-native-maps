@@ -45,6 +45,7 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
   private static final int ANIMATE_CAMERA = 12;
   private static final int ADD_CLUSTER_MARKERS = 13;
   private static final int REMOVE_CLUSTER_MARKER = 14;
+  private static final int REMOVE_ALL_CLUSTER_MARKER = 15;
 
   private final Map<String, AirClusterItem> airClusterItemMap = new HashMap<>();
 
@@ -392,6 +393,10 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
           airClusterItemMap.remove(item);
         }
         break;
+      case REMOVE_ALL_CLUSTER_MARKER:
+        airClusterItemMap.clear();
+        view.mClusterManager.clearItems();
+        view.mClusterManager.cluster();
     }
   }
 
@@ -449,7 +454,8 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
       "setMapBoundaries", SET_MAP_BOUNDARIES,
       "setIndoorActiveLevelIndex", SET_INDOOR_ACTIVE_LEVEL_INDEX,
       "addClusterMarkers", ADD_CLUSTER_MARKERS,
-      "removeClusterMarker", REMOVE_CLUSTER_MARKER
+      "removeClusterMarker", REMOVE_CLUSTER_MARKER,
+      "removeAllClusterMarker", REMOVE_ALL_CLUSTER_MARKER
     ));
 
     return map;

@@ -260,6 +260,12 @@ id regionAsJSON(MKCoordinateRegion region) {
     [_clusterManager cluster];
   }
 }
+-(void) removeAllClusterItem {
+  [_airClusterItemMap removeAllObjects];
+  [_clusterManager clearItems];
+  [_clusterManager cluster];
+  
+}
 #endif
 
 - (NSArray *)getMapBoundaries
