@@ -43,6 +43,7 @@
 | `kmlSrc` | `string` | | The URL from KML file. **Note:** Google Maps and Markers only (either Android or iOS with `PROVIDER_GOOGLE`).
 | `compassOffset` | `Point` | | If set, changes the position of the compass. **Note:** iOS Maps only.
 | `isAccessibilityElement` | `Boolean` | `false` | Determines whether the MapView captures VoiceOver touches or forwards them to children. When `true`, map markers are not visible to VoiceOver.  **Note:** iOS Maps only.
+| `clusterItemIcons` | `[String]` | null | Preload icons for cluster items.
 
 
 ## Events
