@@ -8,7 +8,6 @@
 #ifdef HAVE_GOOGLE_MAPS
 
 #import <GoogleMaps/GoogleMaps.h>
-#import <React/RCTBridge.h>
 #import "AIRGMSMarker.h"
 #import "AIRGoogleMap.h"
 #import "AIRGoogleMapCallout.h"

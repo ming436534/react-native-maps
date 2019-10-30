@@ -24,7 +24,10 @@
 #import "RCTConvert+AirMap.h"
 #import <objc/runtime.h>
 
+
 #ifdef HAVE_GOOGLE_MAPS_UTILS
+#import "AirClusterItem.h"
+#import "AirGMUClusterRenderer.h"
 #import <Google-Maps-iOS-Utils/GMUKMLParser.h>
 #import <Google-Maps-iOS-Utils/GMUPlacemark.h>
 #import <Google-Maps-iOS-Utils/GMUPoint.h>
@@ -66,6 +69,11 @@ id regionAsJSON(MKCoordinateRegion region) {
   BOOL _didCallOnMapReady;
   BOOL _didMoveToWindow;
   BOOL _zoomTapEnabled;
+#ifdef HAVE_GOOGLE_MAPS_UTILS
+  GMUClusterManager *_clusterManager;
+  AirGMUClusterRenderer* _clusterRenderer;
+  NSMutableDictionary<NSString*, AirClusterItem*> *_airClusterItemMap;
+#endif
 }
 
 - (instancetype)init
@@ -87,6 +95,7 @@ id regionAsJSON(MKCoordinateRegion region) {
     _didCallOnMapReady = false;
     _didMoveToWindow = false;
     _zoomTapEnabled = YES;
+    _airClusterItemMap = [[NSMutableDictionary alloc] init];
 
     // Listen to the myLocation property of GMSMapView.
     [self addObserver:self
@@ -223,6 +232,36 @@ id regionAsJSON(MKCoordinateRegion region) {
 }
 #pragma clang diagnostic pop
 
+#ifdef HAVE_GOOGLE_MAPS_UTILS
+- (void)addClusterItems:(NSArray *)items {
+  NSMutableArray* clusterItems = [[NSMutableArray alloc] initWithCapacity:[items count]];
+  for (int i = 0; i < items.count; i++) {
+    NSDictionary* dict = (NSDictionary *)items[i];
+    NSDictionary* latLng = (NSDictionary *)dict[@"latLng"];
+    double lat = [[latLng objectForKey:@"latitude"] doubleValue];
+    double lng = [[latLng objectForKey:@"longitude"] doubleValue];
+    NSString* identifier = dict[@"id"];
+    AirClusterItem* airClusterItem = [[AirClusterItem alloc] initWithPosition:CLLocationCoordinate2DMake(lat, lng)
+                                                                         name:dict[@"title"]
+                                                                   identifier:identifier
+                                                                      iconUri:[dict objectForKey:@"icon"]];
+    [clusterItems addObject:airClusterItem];
+    [_airClusterItemMap setObject:airClusterItem forKey:identifier];
+  }
+  [_clusterManager addItems:clusterItems];
+  [_clusterManager cluster];
+}
+
+-(void) removeClusterItem:(NSString*)identifier  {
+  AirClusterItem* item = [_airClusterItemMap objectForKey:identifier];
+  if (item != nil) {
+    [_clusterManager removeItem:item];
+    [_airClusterItemMap removeObjectForKey:identifier];
+    [_clusterManager cluster];
+  }
+}
+#endif
+
 - (NSArray *)getMapBoundaries
 {
     GMSVisibleRegion visibleRegion = self.projection.visibleRegion;
@@ -294,6 +333,23 @@ id regionAsJSON(MKCoordinateRegion region) {
   if (_didCallOnMapReady) return;
   _didCallOnMapReady = true;
   if (self.onMapReady) self.onMapReady(@{});
+#ifdef HAVE_GOOGLE_MAPS_UTILS
+  id<GMUClusterAlgorithm> algorithm =
+      [[GMUNonHierarchicalDistanceBasedAlgorithm alloc] init];
+  id<GMUClusterIconGenerator> iconGenerator =
+      [[GMUDefaultClusterIconGenerator alloc] init];
+  _clusterRenderer =
+      [[AirGMUClusterRenderer alloc] initWithMapView:self
+                                    clusterIconGenerator:iconGenerator];
+  _clusterRenderer.bridge = _bridge;
+  _clusterManager =
+      [[GMUClusterManager alloc] initWithMap:self
+                                   algorithm:algorithm
+                                    renderer:_clusterRenderer];
+  if (_clusterItemIcons != nil) {
+    [_clusterRenderer loadImageUrls:_clusterItemIcons];
+  }
+#endif
 }
 
 - (void)mapViewDidFinishTileRendering {
@@ -301,21 +357,49 @@ id regionAsJSON(MKCoordinateRegion region) {
 }
 
 - (BOOL)didTapMarker:(GMSMarker *)marker {
-  AIRGMSMarker *airMarker = (AIRGMSMarker *)marker;
+  if ([marker isKindOfClass:[AIRGMSMarker class]]) {
+      AIRGMSMarker *airMarker = (AIRGMSMarker *)marker;
+      if (airMarker != nil) {
+          id event = @{@"action": @"marker-press",
+                       @"id": airMarker.identifier ?: @"unknown",
+                       @"coordinate": @{
+                           @"latitude": @(airMarker.position.latitude),
+                           @"longitude": @(airMarker.position.longitude)
+                           }
+                       };
 
-  id event = @{@"action": @"marker-press",
-               @"id": airMarker.identifier ?: @"unknown",
-               @"coordinate": @{
-                   @"latitude": @(airMarker.position.latitude),
-                   @"longitude": @(airMarker.position.longitude)
-                   }
-               };
+          if (airMarker.onPress) airMarker.onPress(event);
+          if (self.onMarkerPress) self.onMarkerPress(event);
 
-  if (airMarker.onPress) airMarker.onPress(event);
-  if (self.onMarkerPress) self.onMarkerPress(event);
-
-  // TODO: not sure why this is necessary
-  [self setSelectedMarker:marker];
+          // TODO: not sure why this is necessary
+          [self setSelectedMarker:marker];
+      }
+  } else if (marker.userData != nil) {
+    if ([marker.userData isKindOfClass:[AirClusterItem class]]) {
+      AirClusterItem* item = marker.userData;
+      id event = @{@"action": @"marker-press",
+                   @"id": item.identifier ?: @"unknown",
+                   @"coordinate": @{
+                       @"latitude": @(marker.position.latitude),
+                       @"longitude": @(marker.position.longitude)
+                       }
+                   };
+      if (self.onMarkerPress) self.onMarkerPress(event);
+    } else if ([marker.userData conformsToProtocol:@protocol(GMUCluster)]) {
+      id event = @{@"action": @"cluster-marker-press",
+                   @"coordinate": @{
+                       @"latitude": @(marker.position.latitude),
+                       @"longitude": @(marker.position.longitude)
+                       }
+                   };
+      if (self.onMarkerPress) self.onMarkerPress(event);
+      [CATransaction begin];
+      [CATransaction setAnimationDuration:0.3];
+      GMSCameraPosition *newCamera = [GMSCameraPosition cameraWithTarget:marker.position zoom:self.camera.zoom + 1];
+      [self animateToCameraPosition:newCamera];
+      [CATransaction commit];
+    }
+  }
   return NO;
 }
 
@@ -376,6 +460,9 @@ id regionAsJSON(MKCoordinateRegion region) {
                @"region": regionAsJSON([AIRGoogleMap makeGMSCameraPositionFromMap:self andGMSCameraPosition:position]),
                };
   if (self.onChange) self.onChange(event);  // complete
+#ifdef HAVE_GOOGLE_MAPS_UTILS
+  [_clusterManager cluster];
+#endif
 }
 
 - (void)setMapPadding:(UIEdgeInsets)mapPadding {
@@ -875,6 +962,19 @@ id regionAsJSON(MKCoordinateRegion region) {
   if (self.onKmlReady) self.onKmlReady(event);
 #else
     REQUIRES_GOOGLE_MAPS_UTILS();
+#endif
+}
+
+- (NSArray *)ClusterItemIcons {
+  return _clusterItemIcons;
+}
+
+- (void)setClusterItemIcons:(NSArray<NSString *> *)icons {
+#ifdef HAVE_GOOGLE_MAPS_UTILS
+  _clusterItemIcons = icons;
+  if (_didCallOnMapReady) {
+    [_clusterRenderer loadImageUrls:icons];
+  }
 #endif
 }
 
