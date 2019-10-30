@@ -72,6 +72,7 @@ id regionAsJSON(MKCoordinateRegion region) {
 #ifdef HAVE_GOOGLE_MAPS_UTILS
   GMUClusterManager *_clusterManager;
   AirGMUClusterRenderer* _clusterRenderer;
+  NSMutableDictionary<NSString*, AirClusterItem*> *_airClusterItemMap;
 #endif
 }
 
@@ -94,6 +95,7 @@ id regionAsJSON(MKCoordinateRegion region) {
     _didCallOnMapReady = false;
     _didMoveToWindow = false;
     _zoomTapEnabled = YES;
+    _airClusterItemMap = [[NSMutableDictionary alloc] init];
 
     // Listen to the myLocation property of GMSMapView.
     [self addObserver:self
@@ -238,14 +240,25 @@ id regionAsJSON(MKCoordinateRegion region) {
     NSDictionary* latLng = (NSDictionary *)dict[@"latLng"];
     double lat = [[latLng objectForKey:@"latitude"] doubleValue];
     double lng = [[latLng objectForKey:@"longitude"] doubleValue];
+    NSString* identifier = dict[@"id"];
     AirClusterItem* airClusterItem = [[AirClusterItem alloc] initWithPosition:CLLocationCoordinate2DMake(lat, lng)
                                                                          name:dict[@"title"]
-                                                                   identifier:dict[@"id"]
+                                                                   identifier:identifier
                                                                       iconUri:[dict objectForKey:@"icon"]];
     [clusterItems addObject:airClusterItem];
+    [_airClusterItemMap setObject:airClusterItem forKey:identifier];
   }
   [_clusterManager addItems:clusterItems];
   [_clusterManager cluster];
+}
+
+-(void) removeClusterItem:(NSString*)identifier  {
+  AirClusterItem* item = [_airClusterItemMap objectForKey:identifier];
+  if (item != nil) {
+    [_clusterManager removeItem:item];
+    [_airClusterItemMap removeObjectForKey:identifier];
+    [_clusterManager cluster];
+  }
 }
 #endif
 
@@ -361,6 +374,31 @@ id regionAsJSON(MKCoordinateRegion region) {
           // TODO: not sure why this is necessary
           [self setSelectedMarker:marker];
       }
+  } else if (marker.userData != nil) {
+    if ([marker.userData isKindOfClass:[AirClusterItem class]]) {
+      AirClusterItem* item = marker.userData;
+      id event = @{@"action": @"marker-press",
+                   @"id": item.identifier ?: @"unknown",
+                   @"coordinate": @{
+                       @"latitude": @(marker.position.latitude),
+                       @"longitude": @(marker.position.longitude)
+                       }
+                   };
+      if (self.onMarkerPress) self.onMarkerPress(event);
+    } else if ([marker.userData conformsToProtocol:@protocol(GMUCluster)]) {
+      id event = @{@"action": @"cluster-marker-press",
+                   @"coordinate": @{
+                       @"latitude": @(marker.position.latitude),
+                       @"longitude": @(marker.position.longitude)
+                       }
+                   };
+      if (self.onMarkerPress) self.onMarkerPress(event);
+      [CATransaction begin];
+      [CATransaction setAnimationDuration:0.3];
+      GMSCameraPosition *newCamera = [GMSCameraPosition cameraWithTarget:marker.position zoom:self.camera.zoom + 1];
+      [self animateToCameraPosition:newCamera];
+      [CATransaction commit];
+    }
   }
   return NO;
 }
@@ -939,29 +977,6 @@ id regionAsJSON(MKCoordinateRegion region) {
   }
 #endif
 }
-
-#ifdef HAVE_GOOGLE_MAPS_UTILS
-#pragma mark GMUClusterManagerDelegate
-
-- (void)clusterManager:(GMUClusterManager *)clusterManager didTapCluster:(id<GMUCluster>)cluster {
-  GMSCameraPosition *newCamera =
-      [GMSCameraPosition cameraWithTarget:cluster.position zoom:self.camera.zoom + 1];
-  GMSCameraUpdate *update = [GMSCameraUpdate setCamera:newCamera];
-  [self moveCamera:update];
-}
-
-#pragma mark GMSMapViewDelegate
-
-- (BOOL)mapView:(GMSMapView *)mapView didTapMarker:(GMSMarker *)marker {
-//  POIItem *poiItem = marker.userData;
-//  if (poiItem != nil) {
-//    NSLog(@"Did tap marker for cluster item %@", poiItem.name);
-//  } else {
-//    NSLog(@"Did tap a normal marker");
-//  }
-  return NO;
-}
-#endif
 
 @end
 
