@@ -116,8 +116,8 @@ static const double kGMUAnimationDuration = 0.2;  // seconds.
   [[_bridge moduleForName:@"ImageLoader"] loadImageWithURLRequest:[RCTConvert NSURLRequest:url]
                                                               size:CGSizeMake(30, 30)
                                                              scale:RCTScreenScale()
-                                                           clipped:YES
-                                                        resizeMode:RCTResizeModeCenter
+                                                           clipped:NO
+                                                        resizeMode:RCTResizeModeCover
                                                      progressBlock:nil
                                                   partialLoadBlock:nil
                                                    completionBlock:^(NSError *error, UIImage *image) {
@@ -131,10 +131,10 @@ static const double kGMUAnimationDuration = 0.2;  // seconds.
                                                         NSArray<GMSMarker *> *arr = [pendingLoadImageMarkers objectForKey:url];
                                                         if (arr != nil) {
                                                           for (int i = 0; i < arr.count; i++) {
-                                                            UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 30, 30)];
+                                                            UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, image.size.width, image.size.height)];
                                                             imageView.image = image;
                                                             arr[i].iconView = imageView;
-                                                            arr[i].groundAnchor = CGPointMake(0.5, 0.5);
+                                                            arr[i].groundAnchor = CGPointMake(0.5, 1);
                                                           }
                                                         }
                                                         [pendingLoadImageMarkers removeObjectForKey:url];
@@ -397,16 +397,16 @@ static const double kGMUAnimationDuration = 0.2;  // seconds.
   marker.userData = userData;
   if (clusterIcon != nil) {
     UIImageView *imageView;
+    imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, clusterIcon.size.width, clusterIcon.size.height)];
     if ([marker.userData conformsToProtocol:@protocol(GMUCluster)]) {
-      imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, clusterIcon.size.width, clusterIcon.size.height)];
       marker.zIndex = _zIndex + 1;
+      marker.groundAnchor = CGPointMake(0.5, 0.5);
     } else {
-      imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 30, 30)];
       marker.zIndex = _zIndex;
+      marker.groundAnchor = CGPointMake(0.5, 1);
     }
     imageView.image = clusterIcon;
     marker.iconView = imageView;
-    marker.groundAnchor = CGPointMake(0.5, 0.5);
   }
 
   if ([_delegate respondsToSelector:@selector(renderer:willRenderMarker:)]) {
