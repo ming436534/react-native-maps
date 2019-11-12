@@ -24,7 +24,6 @@
 #import "RCTConvert+AirMap.h"
 #import <objc/runtime.h>
 
-
 #ifdef HAVE_GOOGLE_MAPS_UTILS
 #import "AirClusterItem.h"
 #import "AirGMUClusterRenderer.h"
@@ -342,8 +341,14 @@ id regionAsJSON(MKCoordinateRegion region) {
 #ifdef HAVE_GOOGLE_MAPS_UTILS
   id<GMUClusterAlgorithm> algorithm =
       [[GMUNonHierarchicalDistanceBasedAlgorithm alloc] init];
-  id<GMUClusterIconGenerator> iconGenerator =
-      [[GMUDefaultClusterIconGenerator alloc] init];
+  NSArray<UIColor *> *kGMUBucketBackgroundColors = @[
+    [UIColor colorWithRed:0.5078 green:0.8008 blue:0.4453 alpha:1],
+    [UIColor colorWithRed:0.5078 green:0.8008 blue:0.4453 alpha:1],
+    [UIColor colorWithRed:0.5078 green:0.8008 blue:0.4453 alpha:1],
+    [UIColor colorWithRed:0.5078 green:0.8008 blue:0.4453 alpha:1],
+    [UIColor colorWithRed:0.5078 green:0.8008 blue:0.4453 alpha:1],
+  ];
+  id<GMUClusterIconGenerator> iconGenerator = [[GMUDefaultClusterIconGenerator alloc] initWithBuckets:@[@10, @50, @100, @200, @1000] backgroundColors:kGMUBucketBackgroundColors];
   _clusterRenderer =
       [[AirGMUClusterRenderer alloc] initWithMapView:self
                                     clusterIconGenerator:iconGenerator];
