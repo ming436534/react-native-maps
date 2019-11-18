@@ -259,6 +259,18 @@ id regionAsJSON(MKCoordinateRegion region) {
     [_clusterManager cluster];
   }
 }
+
+-(void) removeClusterItems:(NSArray<NSString*> *)identifiers  {
+  for (int i = 0; i < identifiers.count; i++) {
+    AirClusterItem* item = [_airClusterItemMap objectForKey:identifiers[i]];
+    if (item != nil) {
+      [_clusterManager removeItem:item];
+      [_airClusterItemMap removeObjectForKey:identifiers[i]];
+    }
+  }
+  [_clusterManager cluster];
+}
+
 -(void) removeAllClusterItem {
   [_airClusterItemMap removeAllObjects];
   [_clusterManager clearItems];
@@ -471,9 +483,7 @@ id regionAsJSON(MKCoordinateRegion region) {
                @"region": regionAsJSON([AIRGoogleMap makeGMSCameraPositionFromMap:self andGMSCameraPosition:position]),
                };
   if (self.onChange) self.onChange(event);  // complete
-#ifdef HAVE_GOOGLE_MAPS_UTILS
-  [_clusterManager cluster];
-#endif
+
 }
 
 - (void)setMapPadding:(UIEdgeInsets)mapPadding {

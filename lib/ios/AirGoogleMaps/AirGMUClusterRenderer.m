@@ -71,7 +71,7 @@ static const double kGMUAnimationDuration = 0.2;  // seconds.
     _maximumClusterZoom = kGMUMaxClusterZoom;
     _animationDuration = kGMUAnimationDuration;
 
-    _zIndex = 1;
+    _zIndex = -1;
   }
   return self;
 }
@@ -369,6 +369,7 @@ static const double kGMUAnimationDuration = 0.2;  // seconds.
                               clusterIcon:nil
                                  animated:shouldAnimate];
       }
+      
       [_markers addObject:marker];
       [_renderedClusterItems addObject:item];
     }
@@ -415,6 +416,7 @@ static const double kGMUAnimationDuration = 0.2;  // seconds.
   marker.map = _mapView;
 
   if (animated) {
+    marker.tracksViewChanges = YES;
     [CATransaction begin];
     [CATransaction setAnimationDuration:_animationDuration];
     marker.layer.latitude = position.latitude;
@@ -431,8 +433,13 @@ static const double kGMUAnimationDuration = 0.2;  // seconds.
 
     //Assign the animation to your UIImage layer and the
     //animation will start immediately
+    [CATransaction setCompletionBlock:^{
+      marker.tracksViewChanges = NO;
+    }];
     [marker.iconView.layer addAnimation:theAnimation forKey:@"animateOpacity"];
     [CATransaction commit];
+  } else {
+    marker.tracksViewChanges = NO;
   }
 
   if ([_delegate respondsToSelector:@selector(renderer:didRenderMarker:)]) {
