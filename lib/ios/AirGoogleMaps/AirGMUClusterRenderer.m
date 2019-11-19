@@ -393,12 +393,12 @@ static const double kGMUAnimationDuration = 0.2;  // seconds.
                       clusterIcon:(UIImage *)clusterIcon
                          animated:(BOOL)animated {
   GMSMarker *marker = [self markerForObject:userData];
+  AirClusterItem* item = userData;
   CLLocationCoordinate2D initialPosition = animated ? from : position;
   marker.position = initialPosition;
   marker.userData = userData;
   if (clusterIcon != nil) {
-    UIImageView *imageView;
-    imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, clusterIcon.size.width, clusterIcon.size.height)];
+    UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, clusterIcon.size.width, clusterIcon.size.height)];
     if ([marker.userData conformsToProtocol:@protocol(GMUCluster)]) {
       marker.zIndex = _zIndex + 1;
       marker.groundAnchor = CGPointMake(0.5, 0.5);
@@ -407,6 +407,9 @@ static const double kGMUAnimationDuration = 0.2;  // seconds.
       marker.groundAnchor = CGPointMake(0.5, 1);
     }
     imageView.image = clusterIcon;
+    marker.iconView = imageView;
+  } else if (item.iconUri != nil) {
+    UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, clusterIcon.size.width, clusterIcon.size.height)];
     marker.iconView = imageView;
   }
 
