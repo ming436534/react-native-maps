@@ -294,6 +294,10 @@ declare module "react-native-maps" {
     title?: string;
     description?: string;
     image?: ImageURISource | ImageRequireSource;
+    imageSize: {
+      width: number,
+      height: number
+    };
     icon?: ImageURISource | ImageRequireSource;
     opacity?: number;
     pinColor?: string;

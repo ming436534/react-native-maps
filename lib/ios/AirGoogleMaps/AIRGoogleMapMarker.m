@@ -31,6 +31,7 @@ CGRect unionRect(CGRect a, CGRect b) {
   RCTImageLoaderCancellationBlock _reloadImageCancellationBlock;
   __weak UIImageView *_iconImageView;
   UIView *_iconView;
+  CGRect imageSize;
 }
 
 - (instancetype)init
@@ -40,6 +41,7 @@ CGRect unionRect(CGRect a, CGRect b) {
     _realMarker.fakeMarker = self;
     _realMarker.tracksViewChanges = true;
     _realMarker.tracksInfoWindowChanges = false;
+    imageSize = CGRectMake(0, 0, 0, 0);
   }
   return self;
 }
@@ -249,6 +251,16 @@ CGRect unionRect(CGRect a, CGRect b) {
   _realMarker.opacity = opacity;
 }
 
+-(void)setImageSize:(NSDictionary*)size {
+  NSNumber * width = (NSNumber *)[size objectForKey:@"width"];
+  NSNumber * height = (NSNumber *)[size objectForKey:@"height"];
+  if (self->_iconImageView != nil && width != nil && height != nil) {
+    CGRect bounds = CGRectMake(0, 0, [width floatValue], [height floatValue]);
+    [self->_iconImageView setFrame:bounds];
+    imageSize = bounds;
+  }
+}
+
 - (void)setImageSrc:(NSString *)imageSrc
 {
   _imageSrc = imageSrc;
@@ -297,9 +309,14 @@ CGRect unionRect(CGRect a, CGRect b) {
 
                                                                    // TODO: w,h or pixel density could be a prop.
                                                                    float density = 1;
-                                                                   float w = image.size.width/density;
-                                                                   float h = image.size.height/density;
-                                                                   CGRect bounds = CGRectMake(0, 0, w, h);
+                                                                   CGRect bounds;
+                                                                   if (imageSize.size.width != 0) {
+                                                                     bounds = imageSize;
+                                                                   } else {
+                                                                     float w = image.size.width/density;
+                                                                     float h = image.size.height/density;
+                                                                     bounds = CGRectMake(0, 0, w, h);
+                                                                   }
 
                                                                    imageView.contentMode = UIViewContentModeScaleAspectFit;
                                                                    [imageView setFrame:bounds];
@@ -313,6 +330,7 @@ CGRect unionRect(CGRect a, CGRect b) {
 
                                                                    self->_iconImageView = imageView;
                                                                    [self iconViewInsertSubview:imageView atIndex:0];
+                                                                   _realMarker.iconView = imageView;
                                                                  });
                                                                }];
 }
