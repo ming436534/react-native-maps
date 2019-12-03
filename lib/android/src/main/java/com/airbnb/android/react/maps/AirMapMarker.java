@@ -44,6 +44,7 @@ public class AirMapMarker extends AirMapFeature {
 
   private MarkerOptions markerOptions;
   private Marker marker;
+  private boolean isCustomSize = false;
   private int width;
   private int height;
   private String identifier;
@@ -84,7 +85,7 @@ public class AirMapMarker extends AirMapFeature {
 
   private final DraweeHolder<?> logoHolder;
   private DataSource<CloseableReference<CloseableImage>> dataSource;
-  private final ControllerListener<ImageInfo> mLogoControllerListener =
+  private ControllerListener<ImageInfo> mLogoControllerListener =
       new BaseControllerListener<ImageInfo>() {
         @Override
         public void onFinalImageSet(
@@ -101,6 +102,9 @@ public class AirMapMarker extends AirMapFeature {
                 Bitmap bitmap = closeableStaticBitmap.getUnderlyingBitmap();
                 if (bitmap != null) {
                   bitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+                  if (isCustomSize) {
+                    bitmap = bitmap.createScaledBitmap(bitmap, width, height, false);
+                  }
                   iconBitmap = bitmap;
                   iconBitmapDescriptor = BitmapDescriptorFactory.fromBitmap(bitmap);
                 }
@@ -321,6 +325,12 @@ public class AirMapMarker extends AirMapFeature {
     animator.start();
   }
 
+  public void setImageSize(double width, double height) {
+    this.width = (int) width;
+    this.height = (int) height;
+    isCustomSize = width != 0 && height != 0;
+  }
+
   public void setImage(String uri) {
     hasViewChanges = true;
 
@@ -373,8 +383,10 @@ public class AirMapMarker extends AirMapFeature {
           iconBitmap = BitmapFactory.decodeResource(getResources(), drawableId);
           if (iconBitmap == null) { // VectorDrawable or similar
               Drawable drawable = getResources().getDrawable(drawableId);
-              iconBitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
-              drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
+              int width = isCustomSize ? this.width : drawable.getIntrinsicWidth();
+              int height = isCustomSize ? this.height : drawable.getIntrinsicHeight();
+              iconBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+              drawable.setBounds(0, 0, width, height);
               Canvas canvas = new Canvas(iconBitmap);
               drawable.draw(canvas);
           }
@@ -458,8 +470,8 @@ public class AirMapMarker extends AirMapFeature {
       // creating a bitmap from an arbitrary view
       if (iconBitmapDescriptor != null) {
         Bitmap viewBitmap = createDrawable();
-        int width = Math.max(iconBitmap.getWidth(), viewBitmap.getWidth());
-        int height = Math.max(iconBitmap.getHeight(), viewBitmap.getHeight());
+        int width = isCustomSize ? this.width : Math.max(iconBitmap.getWidth(), viewBitmap.getWidth());
+        int height = isCustomSize ? this.height : Math.max(iconBitmap.getHeight(), viewBitmap.getHeight());
         Bitmap combinedBitmap = Bitmap.createBitmap(width, height, iconBitmap.getConfig());
         Canvas canvas = new Canvas(combinedBitmap);
         canvas.drawBitmap(iconBitmap, 0, 0, null);
@@ -514,8 +526,10 @@ public class AirMapMarker extends AirMapFeature {
   }
 
   public void update(int width, int height) {
-    this.width = width;
-    this.height = height;
+    if (!isCustomSize) {
+      this.width = width;
+      this.height = height;
+    }
 
     update(true);
   }

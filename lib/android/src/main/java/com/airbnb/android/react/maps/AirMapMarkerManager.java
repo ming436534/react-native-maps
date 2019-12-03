@@ -221,6 +221,17 @@ public class AirMapMarkerManager extends ViewGroupManager<AirMapMarker> {
 //    public void setImage(AirMapMarker view, ReadableMap image) {
 //        view.setImage(image);
 //    }
+  @ReactProp(name = "imageSize")
+  public void setImageSize(AirMapMarker view, @Nullable ReadableMap map) {
+    if (map != null) {
+      double width = map.getDouble("width");
+      double height = map.getDouble("height");
+      view.setImageSize(width, height);
+    } else {
+      view.setImageSize(0, 0);
+    }
+  }
+
 
   @ReactProp(name = "icon")
   public void setIcon(AirMapMarker view, @Nullable String source) {

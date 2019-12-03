@@ -65,6 +65,7 @@ public class AirClusterRenderer<T extends AirClusterItem> implements ClusterRend
     private final AirIconManager mAirIconManager;
     private final float mDensity;
     private boolean mAnimate;
+    int zIndex = -1;
 
     private static final int[] BUCKETS = {10, 20, 50, 100, 200, 500, 1000};
     private ShapeDrawable mColoredCircleBackground;
@@ -880,6 +881,7 @@ public class AirClusterRenderer<T extends AirClusterItem> implements ClusterRend
                             markerOptions.icon(d);
                         }
                         marker = mClusterManager.getMarkerCollection().addMarker(markerOptions);
+                        marker.setZIndex(zIndex);
                         markerWithPosition = new MarkerWithPosition(marker);
                         mMarkerCache.put(item, marker);
                         if (isPending && l != null) {
@@ -908,6 +910,7 @@ public class AirClusterRenderer<T extends AirClusterItem> implements ClusterRend
                         position(animateFrom == null ? cluster.getPosition() : animateFrom);
                 onBeforeClusterRendered(cluster, markerOptions);
                 marker = mClusterManager.getClusterMarkerCollection().addMarker(markerOptions);
+                marker.setZIndex(zIndex + 1);
                 mMarkerToCluster.put(marker, cluster);
                 mClusterToMarker.put(cluster, marker);
                 markerWithPosition = new MarkerWithPosition(marker);

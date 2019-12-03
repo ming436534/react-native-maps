@@ -266,7 +266,6 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
           event.putString("action", "marker-press");
           event.putString("id", airMapMarker.getIdentifier());
           manager.pushEvent(context, view, "onMarkerPress", event);
-          manager.pushEvent(context, airMapMarker, "onPress", event);
         } else {
           AirClusterItem item = ((AirClusterRenderer)mClusterManager.getRenderer()).getClusterItem(marker);
           if (item != null) {
@@ -278,8 +277,13 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
             if (cluster != null) {
               event.putString("action", "cluster-marker-press");
               manager.pushEvent(context, view, "onMarkerPress", event);
+              CameraPosition p = map.getCameraPosition();
+              CameraPosition.Builder builder = new CameraPosition.Builder().zoom(p.zoom + 1);
+              CameraUpdate update = CameraUpdateFactory.newCameraPosition(builder.build());
+              map.animateCamera(update);
             }
           }
+          return true;
         }
 
         // Return false to open the callout info window and center on the marker

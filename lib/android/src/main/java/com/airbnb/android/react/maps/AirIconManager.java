@@ -83,6 +83,11 @@ public class AirIconManager {
                                 @Nullable Animatable animatable) {
                             CloseableReference<CloseableImage> imageReference = null;
                             try {
+                                int height = imageInfo.getHeight();
+                                int width = imageInfo.getWidth();
+
+                                float finalHeight = 150;
+                                float finalWidth = finalHeight * width / height;
                                 imageReference = dataSource.getResult();
                                 if (imageReference != null) {
                                     CloseableImage image = imageReference.get();
@@ -91,7 +96,7 @@ public class AirIconManager {
                                         Bitmap bitmap = closeableStaticBitmap.getUnderlyingBitmap();
                                         if (bitmap != null) {
                                             bitmap = bitmap.copy(Bitmap.Config.ARGB_8888, false);
-                                            bitmap = bitmap.createScaledBitmap(bitmap, 120, 120, false);
+                                            bitmap = bitmap.createScaledBitmap(bitmap, (int)finalWidth, (int)finalHeight, false);
                                             BitmapDescriptor d = BitmapDescriptorFactory.fromBitmap(bitmap);
                                             uriToBitMapDescriptorMap.put(uri, d);
                                             if (cb != null) cb.onBitmapDescriptorReady(d, uri);
