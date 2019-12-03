@@ -278,8 +278,7 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
               event.putString("action", "cluster-marker-press");
               manager.pushEvent(context, view, "onMarkerPress", event);
               CameraPosition p = map.getCameraPosition();
-              CameraPosition.Builder builder = new CameraPosition.Builder().zoom(p.zoom + 1);
-              CameraUpdate update = CameraUpdateFactory.newCameraPosition(builder.build());
+              CameraUpdate update = CameraUpdateFactory.newLatLngZoom(cluster.getPosition(), p.zoom + 1);
               map.animateCamera(update);
             }
           }
