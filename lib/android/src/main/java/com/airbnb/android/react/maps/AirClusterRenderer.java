@@ -198,12 +198,12 @@ public class AirClusterRenderer<T extends AirClusterItem> implements ClusterRend
     }
 
     protected int getColor(int clusterSize) {
-        final float hueRange = 220;
-        final float sizeRange = 300;
-        final float size = Math.min(clusterSize, sizeRange);
-        final float hue = (sizeRange - size) * (sizeRange - size) / (sizeRange * sizeRange) * hueRange;
+        // final float hueRange = 220;
+        // final float sizeRange = 300;
+        // final float size = Math.min(clusterSize, sizeRange);
+        // final float hue = (sizeRange - size) * (sizeRange - size) / (sizeRange * sizeRange) * hueRange;
         return Color.HSVToColor(new float[]{
-                hue, 1f, .6f
+            203, 1f, 1f
         });
     }
 
