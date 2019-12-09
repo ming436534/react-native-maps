@@ -7,6 +7,7 @@ import android.graphics.Canvas;
 import android.graphics.drawable.Animatable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.util.TypedValue;
 import android.view.View;
 
 import com.facebook.common.references.CloseableReference;
@@ -63,6 +64,10 @@ public class AirIconManager {
     private BitmapDescriptor getBitmapDescriptorByName(String name) {
         return BitmapDescriptorFactory.fromResource(getDrawableResourceByName(name));
     }
+    private int toDP(int value) {
+        return (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
+                (float)value, ctx.getResources().getDisplayMetrics());
+    }
     public void loadImage(final String uri) {
         if (getDescriptor(uri) != null) return;
         if (uri != null && (uri.startsWith("http://") || uri.startsWith("https://") ||
@@ -86,7 +91,7 @@ public class AirIconManager {
                                 int height = imageInfo.getHeight();
                                 int width = imageInfo.getWidth();
 
-                                float finalHeight = 150;
+                                float finalHeight = toDP(43);
                                 float finalWidth = finalHeight * width / height;
                                 imageReference = dataSource.getResult();
                                 if (imageReference != null) {

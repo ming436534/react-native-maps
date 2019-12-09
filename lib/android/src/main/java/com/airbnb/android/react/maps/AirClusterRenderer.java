@@ -244,7 +244,10 @@ public class AirClusterRenderer<T extends AirClusterItem> implements ClusterRend
         if (uriToMarkerCache.containsKey((uri))) {
             List<Marker> l = uriToMarkerCache.get(uri);
             for (Marker m : l) {
-                m.setIcon(d);
+                try {
+                    m.setIcon(d);
+                } catch (Exception e) {
+                }
             }
             uriToMarkerCache.remove(uri);
         }

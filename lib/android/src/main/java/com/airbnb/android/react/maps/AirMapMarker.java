@@ -8,6 +8,8 @@ import android.graphics.Color;
 import android.graphics.drawable.Animatable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.animation.ObjectAnimator;
@@ -326,9 +328,20 @@ public class AirMapMarker extends AirMapFeature {
   }
 
   public void setImageSize(double width, double height) {
-    this.width = (int) width;
-    this.height = (int) height;
+    this.width = ((int)width);
+    this.height = ((int)height);
     isCustomSize = width != 0 && height != 0;
+    if (iconBitmap != null && isCustomSize) {
+      Bitmap bitmapCopy = iconBitmap.copy(Bitmap.Config.ARGB_8888, true);
+      iconBitmap = Bitmap.createScaledBitmap(bitmapCopy, this.width, this.height, false);
+      iconBitmapDescriptor = BitmapDescriptorFactory.fromBitmap(iconBitmap);
+      update(true);
+    }
+  }
+
+  private int toDP(int value) {
+    return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
+            (float)value, context.getResources().getDisplayMetrics());
   }
 
   public void setImage(String uri) {
@@ -389,6 +402,10 @@ public class AirMapMarker extends AirMapFeature {
               drawable.setBounds(0, 0, width, height);
               Canvas canvas = new Canvas(iconBitmap);
               drawable.draw(canvas);
+          } else if (isCustomSize) {
+              Bitmap iconBitmapCopy = Bitmap.createScaledBitmap(iconBitmap, width, height, false);
+              iconBitmap = iconBitmapCopy;
+              iconBitmapDescriptor = BitmapDescriptorFactory.fromBitmap(iconBitmapCopy);
           }
       }
       if (this.markerManager != null && uri != null) {
