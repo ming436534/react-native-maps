@@ -46,6 +46,7 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
   private static final int ADD_CLUSTER_MARKERS = 13;
   private static final int REMOVE_CLUSTER_MARKER = 14;
   private static final int REMOVE_ALL_CLUSTER_MARKER = 15;
+  private static final int REMOVE_CLUSTER_MARKERS = 16;
 
   private final Map<String, AirClusterItem> airClusterItemMap = new HashMap<>();
 
@@ -363,7 +364,7 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
       case SET_INDOOR_ACTIVE_LEVEL_INDEX:
         view.setIndoorActiveLevelIndex(args.getInt(0));
         break;
-      case ADD_CLUSTER_MARKERS:
+      case ADD_CLUSTER_MARKERS: {
         ReadableArray arr = args.getArray(0);
         List<AirClusterItem> l = new ArrayList();
         for (int i = 0; i < arr.size(); i++) {
@@ -385,18 +386,33 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
         view.mClusterManager.addItems(l);
         view.mClusterManager.cluster();
         break;
+      }
       case REMOVE_CLUSTER_MARKER:
         String id = args.getString(0);
         if (airClusterItemMap.containsKey(id)) {
           AirClusterItem item = airClusterItemMap.get(id);
           view.mClusterManager.removeItem(item);
           airClusterItemMap.remove(item);
+          view.mClusterManager.cluster();
         }
         break;
       case REMOVE_ALL_CLUSTER_MARKER:
         airClusterItemMap.clear();
         view.mClusterManager.clearItems();
         view.mClusterManager.cluster();
+        break;
+      case REMOVE_CLUSTER_MARKERS:
+        ReadableArray arr = args.getArray(0);
+        for (int i = 0; i < arr.size(); i++) {
+          String markerID = arr.getString(i);
+          if (airClusterItemMap.containsKey(markerID)) {
+            AirClusterItem item = airClusterItemMap.get(markerID);
+            view.mClusterManager.removeItem(item);
+            airClusterItemMap.remove(item);
+          }
+        }
+        view.mClusterManager.cluster();
+        break;
     }
   }
 
@@ -455,7 +471,8 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
       "setIndoorActiveLevelIndex", SET_INDOOR_ACTIVE_LEVEL_INDEX,
       "addClusterMarkers", ADD_CLUSTER_MARKERS,
       "removeClusterMarker", REMOVE_CLUSTER_MARKER,
-      "removeAllClusterMarker", REMOVE_ALL_CLUSTER_MARKER
+      "removeAllClusterMarker", REMOVE_ALL_CLUSTER_MARKER,
+      "removeClusterMarkers", REMOVE_CLUSTER_MARKERS
     ));
 
     return map;
