@@ -1,6 +1,7 @@
 package com.airbnb.android.react.maps;
 
 import android.view.View;
+import android.widget.RelativeLayout;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -274,6 +275,24 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
     for (int i = 0; i < sources.size(); i++) {
       view.setClusterItemIcon(sources.getString(i));
     }
+  }
+
+  @ReactProp(name = "clusterBuckets")
+  public void setClusterBuckets(AirMapView view, ReadableArray buckets) {
+    int[] bucketsArray = new int[buckets.size()];
+    for (int i = 0; i < buckets.size(); i++) {
+      bucketsArray[i] = buckets.getInt(i);
+    }
+    view.setClusterRendererBuckets(bucketsArray);
+  }
+
+  @ReactProp(name = "clusterColors")
+  public void setClusterColors(AirMapView view, ReadableArray colors) {
+    String[] colorsArray = new String[colors.size()];
+    for (int i = 0; i < colors.size(); i++) {
+      colorsArray[i] = colors.getString(i);
+    }
+    view.setClusterRendererColors(colorsArray);
   }
 
   @Override

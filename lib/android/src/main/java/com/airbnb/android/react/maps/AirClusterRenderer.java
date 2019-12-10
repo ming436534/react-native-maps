@@ -18,6 +18,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.MessageQueue;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
 import android.view.ViewGroup;
@@ -67,7 +68,8 @@ public class AirClusterRenderer<T extends AirClusterItem> implements ClusterRend
     private boolean mAnimate;
     int zIndex = -1;
 
-    private static final int[] BUCKETS = {10, 20, 50, 100, 200, 500, 1000};
+    private static int[] BUCKETS = {10, 20, 50, 100, 200, 500, 1000};
+    private static String[] COLORS = {"#16a085", "#27ae60", "#2980b9", "#8e44ad", "#f39c12", "#d35400", "#c0392b"};
     private ShapeDrawable mColoredCircleBackground;
 
     /**
@@ -93,7 +95,7 @@ public class AirClusterRenderer<T extends AirClusterItem> implements ClusterRend
     /**
      * If cluster size is less than this size, display individual markers.
      */
-    private int mMinClusterSize = 4;
+    private int mMinClusterSize = 6;
 
     /**
      * The currently displayed set of clusters.
@@ -197,14 +199,22 @@ public class AirClusterRenderer<T extends AirClusterItem> implements ClusterRend
         return squareTextView;
     }
 
+    public void setColors(String[] colors) {
+        COLORS = colors;
+    }
+
+    public void setBuckets(int[] buckets) {
+        BUCKETS = buckets;
+    }
+
     protected int getColor(int clusterSize) {
-        // final float hueRange = 220;
-        // final float sizeRange = 300;
-        // final float size = Math.min(clusterSize, sizeRange);
+//         final float hueRange = 220;
+         final float sizeRange = 300;
+         final float size = Math.min(clusterSize, sizeRange);
         // final float hue = (sizeRange - size) * (sizeRange - size) / (sizeRange * sizeRange) * hueRange;
-        return Color.HSVToColor(new float[]{
-            203, 1f, 1f
-        });
+        int bucket = getBucketIdx(clusterSize);
+
+        return Color.parseColor(COLORS[bucket]);
     }
 
     protected String getClusterText(int bucket) {
@@ -229,6 +239,18 @@ public class AirClusterRenderer<T extends AirClusterItem> implements ClusterRend
             }
         }
         return BUCKETS[BUCKETS.length - 1];
+    }
+
+    protected int getBucketIdx(int size) {
+        if (size <= BUCKETS[0]) {
+            return 0;
+        }
+        for (int i = 0; i < BUCKETS.length - 1; i++) {
+            if (size < BUCKETS[i + 1]) {
+                return i;
+            }
+        }
+        return BUCKETS.length - 1;
     }
 
     public int getMinClusterSize() {
@@ -461,7 +483,7 @@ public class AirClusterRenderer<T extends AirClusterItem> implements ClusterRend
                         markerModifier.remove(true, marker.marker);
                     }
                 } else {
-                    markerModifier.remove(onScreen, marker.marker);
+                    markerModifier.remove(true, marker.marker);
                 }
             }
 
@@ -654,16 +676,22 @@ public class AirClusterRenderer<T extends AirClusterItem> implements ClusterRend
          */
         @TargetApi(Build.VERSION_CODES.HONEYCOMB)
         private void performNextTask() {
-            if (!mOnScreenRemoveMarkerTasks.isEmpty()) {
-                removeMarker(mOnScreenRemoveMarkerTasks.poll());
-            } else if (!mAnimationTasks.isEmpty()) {
-                mAnimationTasks.poll().perform();
-            } else if (!mOnScreenCreateMarkerTasks.isEmpty()) {
-                mOnScreenCreateMarkerTasks.poll().perform(this);
-            } else if (!mCreateMarkerTasks.isEmpty()) {
-                mCreateMarkerTasks.poll().perform(this);
-            } else if (!mRemoveMarkerTasks.isEmpty()) {
-                removeMarker(mRemoveMarkerTasks.poll());
+            for (int i = 0; i < 5; i++) {
+                if (!mOnScreenRemoveMarkerTasks.isEmpty()) {
+                    removeMarker(mOnScreenRemoveMarkerTasks.poll());
+                }
+                if (!mAnimationTasks.isEmpty()) {
+                    mAnimationTasks.poll().perform();
+                }
+                if (!mOnScreenCreateMarkerTasks.isEmpty()) {
+                    mOnScreenCreateMarkerTasks.poll().perform(this);
+                }
+                if (!mCreateMarkerTasks.isEmpty()) {
+                    mCreateMarkerTasks.poll().perform(this);
+                }
+                if (!mRemoveMarkerTasks.isEmpty()) {
+                    removeMarker(mRemoveMarkerTasks.poll());
+                }
             }
         }
 
@@ -917,9 +945,7 @@ public class AirClusterRenderer<T extends AirClusterItem> implements ClusterRend
                 mMarkerToCluster.put(marker, cluster);
                 mClusterToMarker.put(cluster, marker);
                 markerWithPosition = new MarkerWithPosition(marker);
-                if (animateFrom != null) {
-                    markerModifier.animate(markerWithPosition, animateFrom, cluster.getPosition());
-                }
+                markerModifier.animate(markerWithPosition, animateFrom, cluster.getPosition());
             } else {
                 markerWithPosition = new MarkerWithPosition(marker);
             }
@@ -1005,16 +1031,18 @@ public class AirClusterRenderer<T extends AirClusterItem> implements ClusterRend
         @Override
         public void onAnimationUpdate(ValueAnimator valueAnimator) {
             float fraction = valueAnimator.getAnimatedFraction();
-            double lat = (to.latitude - from.latitude) * fraction + from.latitude;
-            double lngDelta = to.longitude - from.longitude;
-
-            // Take the shortest path across the 180th meridian.
-            if (Math.abs(lngDelta) > 180) {
-                lngDelta -= Math.signum(lngDelta) * 360;
+            marker.setAlpha(mRemoveOnComplete ? 1 - fraction : fraction);
+            if (to != null && from != null) {
+                double lat = (to.latitude - from.latitude) * fraction + from.latitude;
+                double lngDelta = to.longitude - from.longitude;
+                // Take the shortest path across the 180th meridian.
+                if (Math.abs(lngDelta) > 180) {
+                    lngDelta -= Math.signum(lngDelta) * 360;
+                }
+                double lng = lngDelta * fraction + from.longitude;
+                LatLng position = new LatLng(lat, lng);
+                marker.setPosition(position);
             }
-            double lng = lngDelta * fraction + from.longitude;
-            LatLng position = new LatLng(lat, lng);
-            marker.setPosition(position);
         }
     }
 }

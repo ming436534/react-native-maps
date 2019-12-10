@@ -122,23 +122,34 @@ static const double kGMUAnimationDuration = 0.2;  // seconds.
                                                   partialLoadBlock:nil
                                                    completionBlock:^(NSError *error, UIImage *image) {
                                                       [loadingURIMap removeObjectForKey:url];
-                                                      if (error) {
+                                                      if (error || image == nil) {
                                                         // TODO(lmr): do something with the error?
                                                         NSLog(@"%@", error);
-                                                      }
-                                                      [m setObject:image forKey:url];
-                                                      dispatch_async(dispatch_get_main_queue(), ^{
-                                                        NSArray<GMSMarker *> *arr = [pendingLoadImageMarkers objectForKey:url];
-                                                        if (arr != nil) {
-                                                          for (int i = 0; i < arr.count; i++) {
-                                                            UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, image.size.width, image.size.height)];
-                                                            imageView.image = image;
-                                                            arr[i].iconView = imageView;
-                                                            arr[i].groundAnchor = CGPointMake(0.5, 1);
+                                                        dispatch_async(dispatch_get_main_queue(), ^{
+                                                          NSArray<GMSMarker *> *arr = [pendingLoadImageMarkers objectForKey:url];
+                                                          if (arr != nil) {
+                                                            for (int i = 0; i < arr.count; i++) {
+                                                              arr[i].iconView = nil;
+                                                              arr[i].groundAnchor = CGPointMake(0.5, 1);
+                                                            }
                                                           }
-                                                        }
-                                                        [pendingLoadImageMarkers removeObjectForKey:url];
-                                                      });
+                                                          [pendingLoadImageMarkers removeObjectForKey:url];
+                                                        });
+                                                      } else {
+                                                        [m setObject:image forKey:url];
+                                                        dispatch_async(dispatch_get_main_queue(), ^{
+                                                          NSArray<GMSMarker *> *arr = [pendingLoadImageMarkers objectForKey:url];
+                                                          if (arr != nil) {
+                                                            for (int i = 0; i < arr.count; i++) {
+                                                              UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, image.size.width, image.size.height)];
+                                                              imageView.image = image;
+                                                              arr[i].iconView = imageView;
+                                                              arr[i].groundAnchor = CGPointMake(0.5, 1);
+                                                            }
+                                                          }
+                                                          [pendingLoadImageMarkers removeObjectForKey:url];
+                                                        });
+                                                      }
                                                    }];
 }
 

@@ -121,6 +121,9 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
   private boolean destroyed = false;
   private final ThemedReactContext context;
   private final EventDispatcher eventDispatcher;
+  public String[] clusterColors;
+  public int[] clusterBuckets;
+  public AirClusterRenderer<AirClusterItem> mClusterRenderer;
 
   public ClusterManager<AirClusterItem> mClusterManager;
 
@@ -214,6 +217,20 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
     addView(attacherGroup);
   }
 
+  public void setClusterRendererColors(String[] colors) {
+    if (mClusterRenderer != null) {
+      mClusterRenderer.setColors(colors);
+    }
+    clusterColors = colors;
+  }
+
+  public void setClusterRendererBuckets(int[] buckets) {
+    if (mClusterRenderer != null) {
+      mClusterRenderer.setBuckets(buckets);
+    }
+    clusterBuckets= buckets;
+  }
+
   @Override
   public void onMapReady(final GoogleMap map) {
     if (destroyed) {
@@ -226,10 +243,16 @@ public class AirMapView extends MapView implements GoogleMap.InfoWindowAdapter,
     this.map.setOnPoiClickListener(this);
     this.map.setOnIndoorStateChangeListener(this);
     this.mClusterManager = new ClusterManager<>(context, map);
-    AirClusterRenderer<AirClusterItem> r = new AirClusterRenderer<>(context, map, mClusterManager, this);
-    mClusterManager.setRenderer(r);
+    mClusterRenderer = new AirClusterRenderer<>(context, map, mClusterManager, this);
+    if (clusterColors != null) {
+      mClusterRenderer.setColors(clusterColors);
+    }
+    if (clusterBuckets != null) {
+      mClusterRenderer.setBuckets(clusterBuckets);
+    }
+    mClusterManager.setRenderer(mClusterRenderer);
     for (String u : pendingPreloadUris) {
-      r.preloadIcon(u);
+      mClusterRenderer.preloadIcon(u);
     }
     manager.pushEvent(context, this, "onMapReady", new WritableNativeMap());
 

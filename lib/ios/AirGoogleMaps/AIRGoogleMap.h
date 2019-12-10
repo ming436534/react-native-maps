@@ -46,6 +46,8 @@
 @property (nonatomic, copy) RCTDirectEventBlock onIndoorLevelActivated;
 @property (nonatomic, copy) RCTDirectEventBlock onIndoorBuildingFocused;
 @property (nonatomic, copy) NSArray<NSString *> *clusterItemIcons;
+@property (nonatomic, copy) NSArray<UIColor *> *clusterColors;
+@property (nonatomic, copy) NSArray<NSNumber *> *clusterBuckets;
 @property (nonatomic, strong) NSMutableArray *markers;
 @property (nonatomic, strong) NSMutableArray *polygons;
 @property (nonatomic, strong) NSMutableArray *polylines;

@@ -354,13 +354,22 @@ id regionAsJSON(MKCoordinateRegion region) {
   id<GMUClusterAlgorithm> algorithm =
       [[GMUNonHierarchicalDistanceBasedAlgorithm alloc] init];
   NSArray<UIColor *> *kGMUBucketBackgroundColors = @[
-    [UIColor colorWithRed:0.5078 green:0.8008 blue:0.4453 alpha:1],
-    [UIColor colorWithRed:0.5078 green:0.8008 blue:0.4453 alpha:1],
-    [UIColor colorWithRed:0.5078 green:0.8008 blue:0.4453 alpha:1],
-    [UIColor colorWithRed:0.5078 green:0.8008 blue:0.4453 alpha:1],
-    [UIColor colorWithRed:0.5078 green:0.8008 blue:0.4453 alpha:1],
+    [UIColor colorWithRed:22.0/255.0 green:160.0/255.0 blue:133.0/255.0 alpha:1],
+    [UIColor colorWithRed:39.0/255.0 green:174.0/255.0 blue:96.0/255.0 alpha:1],
+    [UIColor colorWithRed:41.0/255.0 green:128.0/255.0 blue:185.0/255.0 alpha:1],
+    [UIColor colorWithRed:142.0/255.0 green:68.0/255.0 blue:173.0/255.0 alpha:1],
+    [UIColor colorWithRed:243.0/255.0 green:156.0/255.0 blue:18.0/255.0 alpha:1],
+    [UIColor colorWithRed:211.0/255.0 green:84.0/255.0 blue:0.0/255.0 alpha:1],
+    [UIColor colorWithRed:192.0/255.0 green:57.0/255.0 blue:43.0/255.0 alpha:1],
   ];
-  id<GMUClusterIconGenerator> iconGenerator = [[GMUDefaultClusterIconGenerator alloc] initWithBuckets:@[@10, @50, @100, @200, @1000] backgroundColors:kGMUBucketBackgroundColors];
+  if (_clusterColors != nil) {
+    kGMUBucketBackgroundColors = _clusterColors;
+  }
+  NSArray * buckets = @[@10, @20, @50, @100, @200, @500, @1000];
+  if (_clusterBuckets != nil) {
+    buckets = _clusterBuckets;
+  }
+  id<GMUClusterIconGenerator> iconGenerator = [[GMUDefaultClusterIconGenerator alloc] initWithBuckets:buckets backgroundColors:kGMUBucketBackgroundColors];
   _clusterRenderer =
       [[AirGMUClusterRenderer alloc] initWithMapView:self
                                     clusterIconGenerator:iconGenerator];
