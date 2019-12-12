@@ -295,6 +295,11 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
     view.setClusterRendererColors(colorsArray);
   }
 
+  @ReactProp(name = "minimumClusterSize")
+  public void setMinimumClusterSize(AirMapView view, int minimumClusterSize) {
+    view.mClusterRenderer.setMinClusterSize(minimumClusterSize);
+  }
+
   @Override
   public void receiveCommand(AirMapView view, int commandId, @Nullable ReadableArray args) {
     Integer duration;

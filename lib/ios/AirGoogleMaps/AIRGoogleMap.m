@@ -72,6 +72,7 @@ id regionAsJSON(MKCoordinateRegion region) {
   GMUClusterManager *_clusterManager;
   AirGMUClusterRenderer* _clusterRenderer;
   NSMutableDictionary<NSString*, AirClusterItem*> *_airClusterItemMap;
+  int _minimumClusterSize;
 #endif
 }
 
@@ -95,6 +96,7 @@ id regionAsJSON(MKCoordinateRegion region) {
     _didMoveToWindow = false;
     _zoomTapEnabled = YES;
     _airClusterItemMap = [[NSMutableDictionary alloc] init];
+    _minimumClusterSize = 5;
 
     // Listen to the myLocation property of GMSMapView.
     [self addObserver:self
@@ -373,6 +375,7 @@ id regionAsJSON(MKCoordinateRegion region) {
   _clusterRenderer =
       [[AirGMUClusterRenderer alloc] initWithMapView:self
                                     clusterIconGenerator:iconGenerator];
+  _clusterRenderer.minimumClusterSize = _minimumClusterSize;
   _clusterRenderer.bridge = _bridge;
   _clusterManager =
       [[GMUClusterManager alloc] initWithMap:self
@@ -992,6 +995,15 @@ id regionAsJSON(MKCoordinateRegion region) {
   if (self.onKmlReady) self.onKmlReady(event);
 #else
     REQUIRES_GOOGLE_MAPS_UTILS();
+#endif
+}
+
+- (void)setMinimumClusterSize:(int)minimumClusterSize {
+#ifdef HAVE_GOOGLE_MAPS_UTILS
+  if (_clusterRenderer != nil) {
+    _clusterRenderer.minimumClusterSize = minimumClusterSize;
+  }
+  _minimumClusterSize = minimumClusterSize;
 #endif
 }
 

@@ -69,6 +69,7 @@
 @property (nonatomic, assign) BOOL showsIndoors;
 @property (nonatomic, assign) BOOL showsIndoorLevelPicker;
 @property (nonatomic, assign) NSString *kmlSrc;
+@property (nonatomic, assign) int minimumClusterSize;
 
 - (void)didPrepareMap;
 - (void)mapViewDidFinishTileRendering;

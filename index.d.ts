@@ -217,6 +217,9 @@ declare module "react-native-maps" {
     minDelta?: number;
     legalLabelInsets?: EdgeInsets;
     compassOffset?: { x: number; y: number };
+    clusterColors?: [any];
+    clusterBuckets?: [number];
+    minimumClusterSize?: number
 
     onMapReady?: () => void;
     onKmlReady?: (values: KmlMapEvent) => void;
