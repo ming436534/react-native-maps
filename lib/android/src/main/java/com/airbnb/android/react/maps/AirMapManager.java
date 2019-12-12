@@ -279,6 +279,7 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
 
   @ReactProp(name = "clusterBuckets")
   public void setClusterBuckets(AirMapView view, ReadableArray buckets) {
+    if (buckets == null) return;
     int[] bucketsArray = new int[buckets.size()];
     for (int i = 0; i < buckets.size(); i++) {
       bucketsArray[i] = buckets.getInt(i);
@@ -287,7 +288,8 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
   }
 
   @ReactProp(name = "clusterColors")
-  public void setClusterColors(AirMapView view, ReadableArray colors) {
+  public void setClusterColors(AirMapView view, @Nullable ReadableArray colors) {
+    if (colors == null) return;
     String[] colorsArray = new String[colors.size()];
     for (int i = 0; i < colors.size(); i++) {
       colorsArray[i] = colors.getString(i);
