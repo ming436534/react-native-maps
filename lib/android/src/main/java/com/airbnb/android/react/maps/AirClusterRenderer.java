@@ -7,7 +7,6 @@ import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
@@ -18,7 +17,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.MessageQueue;
-import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,7 +33,6 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.maps.android.MarkerManager;
 import com.google.maps.android.R;
 import com.google.maps.android.clustering.Cluster;
-import com.google.maps.android.clustering.ClusterItem;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.ClusterRenderer;
 import com.google.maps.android.geometry.Point;
@@ -173,6 +170,7 @@ public class AirClusterRenderer<T extends AirClusterItem> implements ClusterRend
         mClusterManager.getMarkerCollection().setOnInfoWindowClickListener(null);
         mClusterManager.getClusterMarkerCollection().setOnMarkerClickListener(null);
         mClusterManager.getClusterMarkerCollection().setOnInfoWindowClickListener(null);
+        mAirIconManager.deInit();
     }
 
     public void preloadIcon(String s) {

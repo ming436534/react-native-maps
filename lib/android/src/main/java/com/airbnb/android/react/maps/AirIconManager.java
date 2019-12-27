@@ -41,6 +41,7 @@ public class AirIconManager {
     View view;
     Context ctx;
     AirIconManagerCallbacks cb;
+    boolean isDeInit;
     private final DraweeHolder<?> logoHolder;
     private GenericDraweeHierarchy createDraweeHierarchy() {
         return new GenericDraweeHierarchyBuilder(view.getResources())
@@ -86,6 +87,7 @@ public class AirIconManager {
                                 String id,
                                 @Nullable final ImageInfo imageInfo,
                                 @Nullable Animatable animatable) {
+                            if (isDeInit) return;
                             CloseableReference<CloseableImage> imageReference = null;
                             try {
                                 int height = imageInfo.getHeight();
@@ -139,5 +141,13 @@ public class AirIconManager {
     }
     public BitmapDescriptor getDescriptor(String uri) {
         return uriToBitMapDescriptorMap.get(uri);
+    }
+    public void deInit() {
+        cb = null;
+        uriToBitMapDescriptorMap.clear();
+        isDeInit = true;
+        if (dataSource != null && !dataSource.isClosed()) {
+            dataSource.close();
+        }
     }
 }
