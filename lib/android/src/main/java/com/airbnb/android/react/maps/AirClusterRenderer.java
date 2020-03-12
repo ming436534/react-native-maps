@@ -17,6 +17,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.MessageQueue;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
 import android.view.ViewGroup;
@@ -207,8 +208,8 @@ public class AirClusterRenderer<T extends AirClusterItem> implements ClusterRend
 
     protected int getColor(int clusterSize) {
 //         final float hueRange = 220;
-         final float sizeRange = 300;
-         final float size = Math.min(clusterSize, sizeRange);
+        final float sizeRange = 300;
+        final float size = Math.min(clusterSize, sizeRange);
         // final float hue = (sizeRange - size) * (sizeRange - size) / (sizeRange * sizeRange) * hueRange;
         int bucket = getBucketIdx(clusterSize);
 
@@ -694,11 +695,19 @@ public class AirClusterRenderer<T extends AirClusterItem> implements ClusterRend
         }
 
         private void removeMarker(Marker m) {
-            Cluster<T> cluster = mMarkerToCluster.get(m);
-            mClusterToMarker.remove(cluster);
-            mMarkerCache.remove(m);
-            mMarkerToCluster.remove(m);
-            mClusterManager.getMarkerManager().remove(m);
+            try {
+                try {
+                    Cluster<T> cluster = mMarkerToCluster.get(m);
+                    mClusterToMarker.remove(cluster);
+                    mMarkerCache.remove(m);
+                    mMarkerToCluster.remove(m);
+                    mClusterManager.getMarkerManager().remove(m);
+                } catch (IllegalArgumentException e) {
+                    Log.e("AirClusterRenderer", e.getMessage());
+                }
+            } catch (Exception e) {
+                Log.e("AirClusterRenderer", e.getMessage());
+            }
         }
 
         /**
