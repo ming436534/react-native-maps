@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 #import <Foundation/Foundation.h>
 
-#import <Google-Maps-iOS-Utils/GMUMarkerClustering.h>
+#import <Google-Maps-iOS-Utils/GMUClusterItem.h>
 #import <GoogleMaps/GoogleMaps.h>
 
 @interface AirClusterItem : NSObject<GMUClusterItem>

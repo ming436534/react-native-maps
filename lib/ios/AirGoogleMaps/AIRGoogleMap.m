@@ -31,6 +31,8 @@
 #import <Google-Maps-iOS-Utils/GMUPlacemark.h>
 #import <Google-Maps-iOS-Utils/GMUPoint.h>
 #import <Google-Maps-iOS-Utils/GMUGeometryRenderer.h>
+#import <Google-Maps-iOS-Utils/GMUNonHierarchicalDistanceBasedAlgorithm.h>
+#import <Google-Maps-iOS-Utils/GMUDefaultClusterIconGenerator.h>
 #define REQUIRES_GOOGLE_MAPS_UTILS(feature) do {} while (0)
 #else
 #define GMUKMLParser void

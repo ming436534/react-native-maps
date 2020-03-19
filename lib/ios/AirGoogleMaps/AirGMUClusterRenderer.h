@@ -12,7 +12,8 @@
 
 #import "AirClusterItem.h"
 #import "GMUClusterRenderer.h"
-#import <Google-Maps-iOS-Utils/GMUMarkerClustering.h>
+#import <Google-Maps-iOS-Utils/GMUClusterRenderer.h>
+#import <Google-Maps-iOS-Utils/GMUDefaultClusterRenderer.h>
 #import <React/RCTBridge.h>
 
 NS_ASSUME_NONNULL_BEGIN

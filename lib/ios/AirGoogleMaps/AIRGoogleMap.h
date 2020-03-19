@@ -16,7 +16,7 @@
 #import "RCTConvert+AirMap.h"
 
 #ifdef HAVE_GOOGLE_MAPS_UTILS
-#import <Google-Maps-iOS-Utils/GMUMarkerClustering.h>
+#import <Google-Maps-iOS-Utils/GMUClusterManager.h>
 @interface AIRGoogleMap : GMSMapView<GMUClusterManagerDelegate, GMSMapViewDelegate>
 #else
 @interface AIRGoogleMap : GMSMapView
