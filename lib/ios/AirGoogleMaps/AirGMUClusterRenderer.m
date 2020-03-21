@@ -121,7 +121,6 @@ static const double kGMUAnimationDuration = 0.2;  // seconds.
                                                      progressBlock:nil
                                                   partialLoadBlock:nil
                                                    completionBlock:^(NSError *error, UIImage *image) {
-                                                      if (self->_clusters == nil) return;
                                                       [loadingURIMap removeObjectForKey:url];
                                                       if (error || image == nil) {
                                                         // TODO(lmr): do something with the error?
